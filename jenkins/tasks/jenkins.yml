@@ -10,7 +10,7 @@
   rpm_key: key=/etc/pki/rpm-gpg/jenkins-ci.org.key state=present
 
 - name: install jenkins
-  package: name=dejavu-sans-fonts,java-openjdk-headless,jenkins state=present
+  package: name=fontconfig,dejavu-sans-fonts,java-openjdk-headless,jenkins state=present
 
 - name: copy jenkins configs
   template: src="files/jenkins/var/lib/jenkins/{{ item }}" dest="/var/lib/jenkins/{{ item }}" owner=jenkins group=jenkins mode=0600
