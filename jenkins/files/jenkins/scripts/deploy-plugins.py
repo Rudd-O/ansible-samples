@@ -46,7 +46,7 @@ def request_install_of_plugins(plugins_to_install):
         return False, []
     if to_install:
         shell = '<jenkins>%s</jenkins>'
-        plugreq = '<install plugin="{{ %s }}@{{ latest }}" />'
+        plugreq = '<install plugin="%s@latest" />'
 
         p = "".join([plugreq % t for t in to_install])
         text = shell % p
