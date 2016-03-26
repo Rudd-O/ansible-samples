@@ -1,0 +1,21 @@
+- hosts: buildserver
+  sudo: True
+  tasks:
+  - include: tasks/jenkins.yml
+
+  - include: tasks/jenkins-plugin.yml
+    vars:
+      jenkins:
+        plugins:
+        - copyartifact
+        - git
+        - multiple-scms
+        - parameterized-trigger
+        - scm-api
+        - URLSCM
+        - matrix-combinations-parameter
+    tags:
+    - plugins
+  handlers:
+  - include: handlers/jenkins.yml
+

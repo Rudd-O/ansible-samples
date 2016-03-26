@@ -1,0 +1,7 @@
+---
+
+- name: reload jenkins
+  shell: curl -XPOST http://127.0.0.1:8080/reload
+
+- name: restart jenkins
+  shell: service jenkins restart

@@ -1,0 +1,115 @@
+---
+
+- name: upload jenkins repo file
+  copy: src=files/jenkins/etc/yum.repos.d/jenkins.repo dest=/etc/yum.repos.d/jenkins.repo
+- name: upload jenkins key file
+  copy: src=files/jenkins/etc/pki/rpm-gpg/jenkins-ci.org.key dest=/etc/pki/rpm-gpg/jenkins-ci.org.key
+
+- include: gnupg.yml
+- name: install jenkins key file
+  rpm_key: key=/etc/pki/rpm-gpg/jenkins-ci.org.key state=present
+
+- name: install jenkins
+  package: name=dejavu-sans-fonts,java-openjdk-headless,jenkins state=present
+
+- name: copy jenkins configs
+  template: src="files/jenkins/var/lib/jenkins/{{ item }}" dest="/var/lib/jenkins/{{ item }}" owner=jenkins group=jenkins mode=0600
+  notify: restart jenkins
+  with_items:
+  - config.xml
+  - hudson.tasks.Mailer.xml
+  - jenkins.model.JenkinsLocationConfiguration.xml
+
+- name: copy jenkins public configs
+  template: src="files/jenkins/var/lib/jenkins/{{ item }}" dest="/var/lib/jenkins/{{ item }}" owner=jenkins group=jenkins mode=0644
+  notify: restart jenkins
+  with_items:
+  - nodeMonitors.xml
+
+# may be needed in the future
+# /etc/tmpfiles.d/jenkins.conf:
+#   file.managed:
+#   - contents: x /tmp/jetty-*
+
+# - name: create users directory
+#   file: path=/var/lib/jenkins/{{ item }} state=directory owner=jenkins group=jenkins mode=0700
+#   with_items:
+#   - users
+#   - users/root
+#
+# - name: create root secrets file
+#   copy: |
+#     content='<?xml version='1.0' encoding='UTF-8'?>
+# <user>
+#   <fullName>root</fullName>
+#   <properties>
+#     <jenkins.security.ApiTokenProperty>
+#       <apiToken>Gzq8A+d/wWTMWRZZT2J/tQIWdM/tndaOj+9WqaPEySMGpTVMkLRsd2aFMRmNuTz6</apiToken>
+#     </jenkins.security.ApiTokenProperty>
+#     <com.cloudbees.plugins.credentials.UserCredentialsProvider_-UserCredentialsProperty plugin="credentials@1.4">
+#       <credentials/>
+#     </com.cloudbees.plugins.credentials.UserCredentialsProvider_-UserCredentialsProperty>
+#     <hudson.model.MyViewsProperty>
+#       <views>
+#         <hudson.model.AllView>
+#           <owner class="hudson.model.MyViewsProperty" reference="../../.."/>
+#           <name>All</name>
+#           <filterExecutors>false</filterExecutors>
+#           <filterQueue>false</filterQueue>
+#           <properties class="hudson.model.View$PropertyList"/>
+#         </hudson.model.AllView>
+#       </views>
+#     </hudson.model.MyViewsProperty>
+#     <hudson.search.UserSearchProperty>
+#       <insensitiveSearch>false</insensitiveSearch>
+#     </hudson.search.UserSearchProperty>
+#     <hudson.security.HudsonPrivateSecurityRealm_-Details>
+#       <passwordHash>#jbcrypt:$2a$10$ab2y9vlWZue5pBb6CgQmZ.5yp0fanlYWRpScLicr0zv0fTMt8XmD2</passwordHash>
+#     </hudson.security.HudsonPrivateSecurityRealm_-Details>
+#     <hudson.tasks.Mailer_-UserProperty plugin="mailer@1.5">
+#       <emailAddress>jenkins@mathilda.dragonfear</emailAddress>
+#     </hudson.tasks.Mailer_-UserProperty>
+#   </properties>
+# </user>'
+#     dest=/var/lib/jenkins/users/root/config.xml
+#     owner=jenkins
+#     group=jenkins
+#     mode=0644
+#   notify: reload jenkins
+
+- name: create jobs directory
+  file: path=/var/lib/jenkins/jobs state=directory owner=jenkins group=jenkins mode=0755
+
+- name: create jenkins plugins directory
+  file: path=/var/lib/jenkins/plugins state=directory owner=jenkins group=jenkins mode=0700
+
+- name: enable jenkins
+  service: enabled=yes name=jenkins
+
+- name: unconditionally start jenkins
+  service: state=started name=jenkins
+  register: start_jenkins
+
+- name: sleep for a bit to have jenkins create the secret.key file
+  shell: sleep 5
+  when: start_jenkins.changed
+
+- name: ensure key permissions are right
+  file: state=file owner=jenkins group=jenkins mode=600 name={{ item }}
+  with_items:
+  - /var/lib/jenkins/secret.key
+  - /var/lib/jenkins/identity.key.enc
+
+- name: ensure dumb file gone
+  file: state=absent name=/var/lib/jenkins/secret.key.not-so-secret
+
+- name: download Jenkins keypair for the root user
+  fetch:
+    dest: files/secrets/jenkins/{{ inventory_hostname }}/{{ item }}
+    src: /var/lib/jenkins/{{ item }}
+    flat: yes
+    validate_checksum: no
+  with_items:
+  - secret.key
+  - identity.key.enc
+  - secrets/master.key

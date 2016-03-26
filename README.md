@@ -7,3 +7,4 @@ directly into your setup.
 
 * [mailserver/](mailserver/) sets up a mail server with Dovecot, Postfixm
    and the SSL certificates you provide yourself.
+* [jenkins/](jenkins/) sets up a Jenkins server with a number of plugins.

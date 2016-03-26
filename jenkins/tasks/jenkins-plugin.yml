@@ -1,0 +1,6 @@
+---
+- name: install jenkins plugin
+  script: files/jenkins/scripts/deploy-plugins.py "'{{ jenkins | to_yaml }}'"
+  register: jenkinsplugin
+  changed_when: '"CHANGED" in jenkinsplugin.stdout'
+  notify: restart jenkins
