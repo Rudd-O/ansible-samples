@@ -1,4 +1,7 @@
 ---
+- name: ensure yaml is available
+  package: name=PyYAML state=present
+
 - name: install jenkins plugin
   script: files/jenkins/scripts/deploy-plugins.py "'{{ jenkins | to_yaml }}'"
   register: jenkinsplugin
