@@ -60,10 +60,9 @@ def request_install_of_plugins(plugins_to_install):
         response = conn.getresponse().read()
     for _ in range(30):
         remaining_to_install = set(plugins_to_install) - set(existing_plugins_and_versions())
-        if remaining_to_install:
-            time.sleep(1)
-            continue
-        return True, list(to_install)
+        if not remaining_to_install:
+            break
+        time.sleep(1)
     return True, list(remaining_to_install)
 
 def run():
