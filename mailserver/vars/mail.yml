@@ -30,6 +30,12 @@ mail:
   - domain.com
   - bond.name
 ssl:
+  # You must list the keys for the mail server here.
+  #
+  # The certificate domain name must match the domain
+  # name of the server in mail.hostname, which should
+  # also be the same name below.
+  #
   # Deploy your key files locally in the Ansible master node
   # within folder files/secrets/tls, relative to the
   # ../role-mailserver.yml file.  Edit these variables
