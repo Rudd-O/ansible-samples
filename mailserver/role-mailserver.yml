@@ -124,6 +124,33 @@
     register: dovecot_config
     tags:
     - dovecot
+  - name: create dovecot sieve after.d directories
+    file: name={{ item }} state=directory owner=root group=root mode=0755
+    with_items:
+    - /var/lib/sieve
+    - /var/lib/sieve/after.d
+    tags:
+    - dovecot
+  - name: deploy dovecot after.d scripts
+    copy:
+      src: files/mailserver/var/lib/sieve/after.d/
+      dest: /var/lib/sieve/after.d/
+      owner: root
+      group: root
+      mode: 0644
+    register: sieve_afterd
+    tags:
+    - dovecot
+  - name: compile dovecot after.d scripts
+    shell: |
+      set -ex
+      cd /var/lib/sieve/after.d
+      for script in *.sieve ; do
+        sievec "$script"
+      done
+    when: '{{ sieve_afterd.changed }}'
+    tags:
+    - dovecot
   - name: regenerate postfix hashmaps
     shell: postmap /etc/postfix/virtual
     when: postfix_config.changed
