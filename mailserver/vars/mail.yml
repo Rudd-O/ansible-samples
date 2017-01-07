@@ -29,6 +29,34 @@ mail:
   - mailserver.domain.com
   - domain.com
   - bond.name
+dkim:
+  # You must list every domain you will be sending mail as
+  # in this list.
+
+  # Deploy your key files locally in the Ansible master node
+  # within folder files/secrets/dkim, relative to the
+  # ../role-mailserver.yml file.  For each domain that you
+  # list here, you have to run the following shell script
+  # within that `dkim` directory:
+  #
+  # DOMAIN=<type your domain here>
+  # mkdir $DOMAIN
+  # opendkim-genkey -D $DOMAIN -d $DOMAIN -s default -b 2048
+  #
+  # That process will create the necessary keys.
+  # Note that you will have to have the program `opendkim-genkey`
+  # installed on the Ansible master node, which is available
+  # within the opendkim package.
+  #
+  # After you have generated the necessary keys, you must
+  # publish the contents of the private.txt file (in each
+  # key subdirectory) via DNS, following the DNS portion
+  # of the guide here:
+  # https://support.dnsimple.com/articles/dkim-record/
+  # Otherwise mail servers will mark your outgoing e-mails
+  # from these domains as improperly signed by DKIM.
+  - domain.com
+  - bond.name
 ssl:
   # You must list the keys for the mail server here.
   #

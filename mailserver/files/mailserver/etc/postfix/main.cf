@@ -725,3 +725,6 @@ smtp_tls_key_file = $smtpd_tls_key_file
 message_size_limit = 30000000
 mailbox_size_limit = 300000000
 virtual_alias_maps = hash:/etc/postfix/virtual
+
+smtpd_milters = unix:/var/spool/opendkim/socket/opendkim.sock
+non_smtpd_milters = unix:/var/spool/opendkim/socket/opendkim.sock
