@@ -124,34 +124,49 @@
     register: dovecot_config
     tags:
     - dovecot
-  - name: create dovecot sieve after.d directories
+  - name: create dovecot sieve global directories
     file: name={{ item }} state=directory owner=root group=root mode=0755 setype=dovecot_etc_t seuser=system_u
     with_items:
     - /var/lib/sieve
+    - /var/lib/sieve/before.d
     - /var/lib/sieve/after.d
+    - /var/lib/sieve/global
     tags:
     - dovecot
-  - name: deploy dovecot after.d scripts
+  - name: deploy dovecot global scripts
     copy:
-      src: files/mailserver/var/lib/sieve/after.d/
-      dest: /var/lib/sieve/after.d/
+      src: files/mailserver/var/lib/sieve/{{ item }}/
+      dest: /var/lib/sieve/{{ item }}/
       owner: root
       group: root
       mode: 0644
       setype: dovecot_etc_t
       seuser: system_u
-    register: sieve_afterd
+    with_items:
+    - before.d
+    - after.d
+    - global
+    register: sieve_global
     tags:
     - dovecot
-  - name: compile dovecot after.d scripts
+  - name: compile dovecot global scripts
     shell: |
       set -ex
-      cd /var/lib/sieve/after.d
-      for script in *.sieve ; do
-        sievec "$script"
-        chcon -u system_u -t dovecot_etc_t $(echo "$script" | sed 's/.sieve$/.svbin/')
+      for item in before.d after.d global ; do
+        cd /var/lib/sieve/$item
+        for script in *.sieve ; do
+          if ! test -f "$script" ; then continue ; fi
+          sievec "$script"
+          chcon -u system_u -t dovecot_etc_t $(echo "$script" | sed 's/.sieve$/.svbin/')
+        done
+        for compiled in *.svbin ; do
+          if ! test -f "$compiled" ; then continue ; fi
+          if ! test -f $(echo "$compiled" | sed 's/.svbin$/.sieve/') ; then
+            rm -f "$compiled"
+          fi
+        done
       done
-    when: '{{ sieve_afterd.changed }}'
+    when: '{{ sieve_global.changed }}'
     tags:
     - dovecot
   - name: regenerate postfix hashmaps

@@ -12,6 +12,8 @@ directly into your setup.
    SSL and DKIM.
 * [jenkins/](jenkins/) sets up a Jenkins server with a number of plugins.
 
+See README.md files inside each directory, if they exist.
+
 Licensing
 ---------
 
