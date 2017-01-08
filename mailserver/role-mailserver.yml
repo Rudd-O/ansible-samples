@@ -125,7 +125,7 @@
     tags:
     - dovecot
   - name: create dovecot sieve after.d directories
-    file: name={{ item }} state=directory owner=root group=root mode=0755
+    file: name={{ item }} state=directory owner=root group=root mode=0755 setype=dovecot_etc_t seuser=system_u
     with_items:
     - /var/lib/sieve
     - /var/lib/sieve/after.d
@@ -138,6 +138,8 @@
       owner: root
       group: root
       mode: 0644
+      setype: dovecot_etc_t
+      seuser: system_u
     register: sieve_afterd
     tags:
     - dovecot
@@ -147,6 +149,7 @@
       cd /var/lib/sieve/after.d
       for script in *.sieve ; do
         sievec "$script"
+        chcon -u system_u -t dovecot_etc_t $(echo "$script" | sed 's/.sieve$/.svbin/')
       done
     when: '{{ sieve_afterd.changed }}'
     tags:
