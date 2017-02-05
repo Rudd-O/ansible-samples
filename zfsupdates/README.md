@@ -3,7 +3,13 @@
 This Ansible playbook installs ZFS on your Fedora system, and makes sure that
 the ZFS packages on your system are always up-to-date, down to the contents
 of the initial RAM disks that are necessary to boot from a ZFS root file
-system.
+system.  It takes care of a few steps that normal DNF update does not:
+
+* Setting up DNF to keep old kernel-devel packages installed.
+* Wiping old DKMS-built modules and refreshing them with the new
+  SPL and ZFS modules shipped with the ZFS updates.
+* Regenerating the initial RAM disks so they will contain ZFS and your
+  system will boot reliably from a ZFS root.
 
 The updated packages are fetched from the official
 [ZFS on Linux repo](https://github.com/zfsonlinux/zfs/wiki/Fedora).
