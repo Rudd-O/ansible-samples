@@ -11,6 +11,8 @@ directly into your setup.
    directory for instructions on domains, users, host names,
    SSL and DKIM.
 * [jenkins/](jenkins/) sets up a Jenkins server with a number of plugins.
+* [zfsupdates/](zfsupdates/) aids you in keeping ZFS up to date on your
+   Fedora system which boots from ZFS.
 
 See README.md files inside each directory, if they exist.
 
