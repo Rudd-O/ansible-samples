@@ -1,0 +1,123 @@
+- name: make sure that all ramdisks have ZFS
+  shell: |
+      set -e
+      vers=`rpm -q kernel-devel | sed s/kernel-devel-//`
+      for ver in $vers ; do
+        if [ "$ver" == "3.18.17-6.pvops.qubes.x86_64" ] ; then continue ; fi
+        rpm -q kernel-$ver > /dev/null 2>&1 || rpm -q kernel-core-$ver > /dev/null 2>&1 || continue
+        lsinitrd /boot/initramfs-$ver.img 2>/dev/null | grep -q zfs.ko >&2 || { touch /.zfsreinstallneeded ; echo NO ; }
+        lsinitrd /boot/initramfs-$ver.img 2>/dev/null | grep -qq etc/crypttab >&2 || { touch /.zfsreinstallneeded ; echo NO ; }
+      done
+  register: all_ramdisks_have_zfs
+  changed_when: "{{ 'NO' in all_ramdisks_have_zfs.stdout }}"
+  tags:
+  - zfs
+  - dkms
+
+- name: check ZFS reinstall marker
+  shell: if test -f /.zfsreinstallneeded ; then echo YES ; else echo NO ; fi
+  check_mode: no
+  register: mustrecompile
+  changed_when: "{{ 'YES' in mustrecompile.stdout }}"
+  tags:
+  - zfs
+  - dkms
+
+- name: eliminate obsolete versions of DKMS SPL and ZFS
+  shell: test -d /var/lib/dkms/{{ item }}/ || exit 0 ; cd /var/lib/dkms/{{ item }}/ && for f in */source ; do if [ ! -f "$f/dkms.conf" ] ; then rm -rf $(dirname "$f") ; echo ELIMINATED "$f" ; fi ; done
+  register: deleted_obsolete
+  changed_when: '{{ "ELIMINATED" in deleted_obsolete.stdout }}'
+  with_items:
+  - spl
+  - zfs
+  tags:
+  - zfs
+  - olddkms
+
+- name: uninstall old SPL and ZFS
+  shell: |
+      set -ex
+      vers=`(rpm -q kernel | sed s/kernel-// ; rpm -q kernel-devel | sed s/kernel-devel-//) | sort | uniq`
+      ret=0
+      for ver in $vers ; do
+        # we only uninstall kernel modules from kernels who still can have modules rebuilt
+        # kernels that do not have the main or the devel packages cannot be rebuilt
+        # so we skip them
+        rpm -q kernel-$ver > /dev/null || rpm -q kernel-core-$ver > /dev/null || { echo No kernel $ver >&2 ; continue ; }
+        rpm -q kernel-devel-$ver > /dev/null || { echo No kernel-devel $ver >&2 ; continue ; }
+        for module in zfs spl ; do
+          for action in uninstall remove ; do
+            dkmsver=`ls --sort=time -d1 /usr/src/$module-* | head -1` ; dkmsver=${dkmsver#/usr/src/$module-}
+            test -n "$dkmsver"
+            out=`dkms status -m $module -k $ver -v $dkmsver`
+            if [ "$out" != "" ] ; then
+              if [ $action == uninstall ] ; then
+                out=`dkms status -m $module -k $ver -v $dkmsver`
+                echo "$out" | grep -q ': installed' || { echo $module is not installed >&2 ; continue ; }
+              elif [ $action == remove ] ; then
+                out=`dkms status -m $module -k $ver -v $dkmsver`
+                echo "$out" | grep -q ': built' || { echo $module is not built >&2 ; continue ; }
+              fi
+              out=`dkms $action --directive REMAKE_INITRD=no -m $module -k $ver -v $dkmsver 2>&1` || ret=$?
+              echo "$out" >&2
+              echo "$out" | grep -q "is not currently installed" && continue || true
+              echo "$out" | grep -q "is no instance of" && continue || true
+              if [ x$ret != x0 ] ; then echo "DKMS $action for $ver exited with return code $ret" >&2 ; exit $ret ; fi
+              echo YES
+            fi
+          done
+        done
+      done
+  register: uninstall_old_spl_zfs
+  when: '{{ mustrecompile.changed }}'
+  changed_when: "{{ 'YES' in uninstall_old_spl_zfs.stdout }}"
+  tags:
+  - zfs
+  - dkms
+
+- name: dkms install recently-installed SPL and ZFS
+  shell: |
+      set -ex
+      vers=`rpm -q kernel-devel | sed s/kernel-devel-//`
+      ret=0
+      for ver in $vers ; do
+        rpm -q kernel-$ver > /dev/null || rpm -q kernel-core-$ver > /dev/null || { echo No kernel $ver >&2 ; continue ; }
+        for module in spl zfs ; do
+          echo Installing $module for kernel $ver >&2
+          dkmsver=`ls --sort=time -d1 /usr/src/$module-* | head -1` ; dkmsver=${dkmsver#/usr/src/$module-}
+          test -n "$dkmsver"
+          dkms install --directive REMAKE_INITRD=no -m $module -k "$ver" -v "$dkmsver" || exit $?
+          echo YES
+        done
+      done
+  register: install_spl_zfs
+  when: '{{ mustrecompile.changed }}'
+  changed_when: "{{ 'YES' in install_spl_zfs.stdout }}"
+  tags:
+  - zfs
+  - dkms
+
+- include: redo-initramfs.yml
+  when: '{{ mustrecompile.changed or upgrade_zfs.changed }}'
+  tags:
+  - dkms
+
+- name: sanity-check initramfs
+  shell: |
+      set -e
+      vers=`rpm -q kernel-devel | sed s/kernel-devel-//`
+      for ver in $vers ; do
+        rpm -q kernel-$ver > /dev/null 2>&1 || rpm -q kernel-core-$ver > /dev/null 2>&1 || continue
+        lsinitrd /boot/initramfs-$ver.img 2>/dev/null | grep zfs.ko >&2 || { echo "kernel-$ver initramfs does not contain zfs.ko" >&2 ; exit 1 ; }
+        lsinitrd /boot/initramfs-$ver.img 2>/dev/null | grep etc/crypttab >&2 || { echo "kernel-$ver initramfs does not contain crypttab" >&2 ; exit 1 ; }
+      done
+  check_mode: no
+  changed_when: False
+  tags:
+  - zfs
+  - dkms
+
+- name: remove ZFS reinstall marker
+  file: name=/.zfsreinstallneeded state=absent
+  tags:
+  - zfs

@@ -1,0 +1,25 @@
+---
+
+- name: redo initramfs
+  shell: |
+      set -ex
+      cd /boot
+      for initramfs in initramfs-*.img ; do
+          if [ ! -f "$initramfs" ] ; then break ; fi
+          vmlinuz=vmlinuz-${initramfs#initramfs-}
+          vmlinuz=${vmlinuz%.img}
+          ver=${vmlinuz#vmlinuz-}
+          if [ ! -f "$vmlinuz" ] ; then
+              echo "$vmlinuz does not exist, removing obsolete initramfs and /lib/modules" >&2
+              rm -fr "$initramfs" "$initramfs.knowngood" /lib/modules/"$ver"
+              echo CHANGED
+              continue
+          fi
+          if [ ! -f "$initramfs".knowngood ] ; then
+              cp -f "$initramfs" "$initramfs".knowngood && echo CHANGED
+          fi
+      done
+      dracut -fv --regenerate-all && echo CHANGED
+  register: regenramfs
+  when: '{{ ansible_distribution in "Fedora Qubes" }}'
+  changed_when: "{{ 'CHANGED' in regenramfs.stdout }}"

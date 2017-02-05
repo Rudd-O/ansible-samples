@@ -1,0 +1,123 @@
+- file: name=/usr/src/zfsupdates state=absent
+
+- name: discover package manager config
+  shell: if test -f /etc/dnf/dnf.conf ; then echo -n /etc/dnf/dnf.conf ; else echo -n /etc/yum.conf ; fi
+  check_mode: no
+  changed_when: False
+  register: pkgconffile
+  tags:
+  - zfs
+  - yum
+  - ini
+
+- name: kernel and kernel devel both must be installable without upgrade
+  ini_file:
+    dest: "{{ pkgconffile.stdout }}"
+    section: main
+    option: installonlypkgs
+    value: kernel, kernel-modules, kernel-core, kernel-devel
+  when: "{{ 'qubes-dom0s' not in groups or inventory_hostname not in groups['qubes-dom0s'] }}"
+  tags:
+  - zfs
+  - yum
+  - ini
+
+- name: kernel and kernel devel both must be installable without upgrade
+  shell: |
+    if ! grep -q "ANSIBLE BEGIN" "{{ pkgconffile.stdout }}" ; then
+      sed -i "s/### QUBES END ###/### QUBES END ###\n### ANSIBLE BEGIN ###\n### ANSIBLE END ###/" "{{ pkgconffile.stdout }}"
+      echo CHANGED
+    fi
+  register: insertmarker
+  changed_when: "{{ 'CHANGED' in insertmarker.stdout }}"
+  when: "{{ 'qubes-dom0s' in groups and inventory_hostname in groups['qubes-dom0s'] }}"
+  tags:
+  - zfs
+  - yum
+  - ini
+
+- name: kernel and kernel devel both must be installable without upgrade
+  blockinfile:
+    dest: "{{ pkgconffile.stdout }}"
+    marker: "### ANSIBLE {mark} ###"
+    content: "installonlypkgs=kernel, kernel-modules, kernel-core, kernel-devel, kernel-qubes-vm"
+  when: "{{ 'qubes-dom0s' in groups and inventory_hostname in groups['qubes-dom0s'] }}"
+  tags:
+  - zfs
+  - yum
+  - ini
+
+- name: test for build dependencies in dom0
+  action: shell rpm -q automake rpm-build libtool libuuid-devel libblkid-devel zlib-devel make ksh || echo NO
+  register: can_build
+  when: '{{ "qubes-dom0s" in groups and inventory_hostname in groups["qubes-dom0s"] }}'
+  changed_when: False
+  check_mode: no
+
+- name: install build dependencies in dom0
+  shell: qubes-dom0-update -y git automake rpm-build libtool libuuid-devel libblkid-devel zlib-devel make ksh
+  when: '{{ "qubes-dom0s" in groups and inventory_hostname in groups["qubes-dom0s"] and "NO" in can_build.stdout }}'
+
+- name: upgrade ZFS RPMs
+  package: name={{ item }} state=latest
+  with_items: '{{ zfs_packages }}'
+  when: "{{ 'qubes-dom0s' not in groups or inventory_hostname not in groups['qubes-dom0s'] }}"
+  register: upgrade_zfs_nondom0
+  tags:
+  - zfs
+
+- name: upgrade ZFS RPMs for Qubes dom0s
+  shell: rpm -q {{ " ".join(zfs_packages) }} || qubes-dom0-update -y {{ " ".join(zfs_packages) }}
+  when: '{{ "qubes-dom0s" in groups and inventory_hostname in groups["qubes-dom0s"] }}'
+  register: upgrade_zfs_dom0
+  changed_when: '{{ upgrade_zfs_dom0.stdout.find("Nothing to do.") == -1 }}'
+
+- set_fact:
+    upgrade_zfs: '{{ (upgrade_zfs_nondom0 is defined and upgrade_zfs_nondom0.changed|default(False)) or (upgrade_zfs_dom0 is defined and upgrade_zfs_dom0.changed|default(False)) }}'
+
+- name: ensure that ZFS unit files are active
+  shell: |
+    for a in zfs-import-cache.service zfs-import-scan.service zfs-mount.service zfs-share.service zfs-zed.service zfs.target ; do
+      systemctl preset "$a"
+    done
+  register: unitpresets
+  changed_when: '{{ "systemd" in unitpresets.stderr }}'
+  tags:
+  - zfs
+
+- name: test that GRUB ZFS fixer RPM is installed
+  shell: rpm -q grub-zfs-fixer && echo YES || echo NO
+  register: grubzfsfixertest
+  changed_when: False
+  check_mode: no
+  tags:
+  - grub
+
+- name: upgrade GRUB ZFS fixer RPMs
+  package: name=grub-zfs-fixer state=latest
+  register: upgrade_grub
+  when: "'YES' in grubzfsfixertest.stdout"
+  tags:
+  - grub
+
+- name: remove zfs-test RPM
+  package: name=zfs-test state=absent
+  tags:
+  - zfs
+
+- name: sanity-check grub2-mkconfig
+  shell: |
+      set -e
+      grep "This program was patched" /usr/sbin/grub2-mkconfig
+      grep "This program was patched" /etc/grub.d/10_linux
+      grep "This program was patched" /etc/grub.d/20_linux_xen
+  when: "'YES' in grubzfsfixertest.stdout"
+  changed_when: False
+  tags:
+  - grub
+
+- name: touch marker file after executed upgrade
+  shell: touch /.zfsreinstallneeded
+  when: '{{ upgrade_zfs }}'
+  tags:
+  - zfs
