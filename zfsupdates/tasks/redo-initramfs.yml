@@ -4,10 +4,13 @@
   shell: |
       set -ex
       cd /boot
-      for initramfs in initramfs-*.img ; do
+      for initramfs in initramfs-*.img initramfs-*.img.knowngood ; do
           if [ ! -f "$initramfs" ] ; then break ; fi
           vmlinuz=vmlinuz-${initramfs#initramfs-}
+          vmlinuz=${vmlinuz%.knowngood}
           vmlinuz=${vmlinuz%.img}
+          initramfs=${initramfs%.knowngood}
+          initramfs=${initramfs%.knowngood}
           ver=${vmlinuz#vmlinuz-}
           if [ ! -f "$vmlinuz" ] ; then
               echo "$vmlinuz does not exist, removing obsolete initramfs and /lib/modules" >&2
