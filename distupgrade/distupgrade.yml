@@ -1,4 +1,5 @@
 - hosts: all
+  strategy: free
   become: True
   tasks:
   - name: record source distribution version upgrade and request relabeling if needed
