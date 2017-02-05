@@ -13,8 +13,10 @@ directly into your setup.
 * [jenkins/](jenkins/) sets up a Jenkins server with a number of plugins.
 * [zfsupdates/](zfsupdates/) aids you in keeping ZFS up to date on your
    Fedora system which boots from ZFS.
+* [distupgrade/](distupgrade/) upgrades your Fedora machine to a newer
+  release, taking appropriate recovery precautions.
 
-See README.md files inside each directory, if they exist.
+See `README.md` files inside each directory, when they exist.
 
 Licensing
 ---------
