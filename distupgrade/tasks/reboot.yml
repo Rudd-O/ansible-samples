@@ -1,0 +1,33 @@
+- name: fail reboot when incompatible
+  fail: msg='This task is incompatible with ansible_connection={{ ansible_connection }}'
+  when: '{{ ansible_connection != "ssh" and ansible_connection != "qubes" and ansible_connection != "smart" }}'
+
+- name: run reboot command
+  shell: sleep 2 && {{ reboot_command|default("reboot") }}
+  async: 1
+  poll: 0
+  ignore_errors: true
+
+- name: locally notify about reboot
+  local_action: shell zenity --notification --text "Machine {{ inventory_hostname }} rebooted.  Ensure it decrypts if it is encrypted." || true
+
+- name: wait for server to come back after reboot
+  local_action: wait_for port=22 delay=15 timeout=600 search_regex=OpenSSH host={{ ansible_ssh_host|default(inventory_hostname) }} state=started
+  when: '{{ ansible_connection != "qubes" }}'
+  register: waitalive
+  failed_when: '{{ waitalive.failed|default(False) and "reset by peer" not in waitalive.module_stderr|default("") }}'
+  become: False
+
+- name: wait for server to come back after reboot, take 2
+  local_action: wait_for port=22 delay=15 timeout={{ timeout|default(600) }} search_regex=OpenSSH host={{ ansible_ssh_host|default(inventory_hostname) }} state=started
+  when: '{{ ansible_connection != "qubes" and ("reset by peer" in waitalive.module_stderr|default("")) }}'
+  become: False
+
+- name: wait for VM to come back after reboot
+  raw: bash -c 'sleep 1 ; echo -n yes'
+  register: after_reboot
+  retries: 30
+  until: '{{ "yes" in after_reboot.stdout|default("") }}'
+  delay: 5
+  when: '{{ ansible_connection == "qubes" }}'
+  become: False

@@ -1,0 +1,66 @@
+- hosts: all
+  become: True
+  tasks:
+  - name: record source distribution version upgrade and request relabeling if needed
+    shell: |
+      set -e
+      if ! test -f /.distupgrade ; then
+        echo CHANGED >> /dev/stderr
+        echo {{ ansible_distribution_version }} > /.distupgrade
+        echo {{ ansible_distribution_version|int + 1 }} >> /.distupgrade
+        selinuxenabled && touch /.autorelabel || true
+      fi
+      cat /.distupgrade
+    register: distrovercontent
+    when: '{{ ansible_distribution in "Fedora Qubes" }}'
+    changed_when: '{{ "CHANGED" in distrovercontent.stderr }}'
+
+  - name: set variable up
+    set_fact:
+      distrover: '{{ distrovercontent.stdout_lines[0] }}'
+      targetdistrover: '{{ distrovercontent.stdout_lines[1] }}'
+
+  - name: snapshot ZFS root file system
+    shell: |
+      rootdataset=$(zfs list / -H -o name) || exit 0
+      sname="$rootdataset@distupgrade-from-{{ distrover }}-to-{{ distrover }}"
+      zfs list "$sname" -H -o name || {
+        zfs snapshot "$sname" || exit 5
+        echo CHANGEDCHANGED >&2
+      }
+    register: zfssnap
+    changed_when: '{{ "CHANGEDCHANGED" in zfssnap.stderr }}'
+
+  - name: enable debug shell
+    service: name=debug-shell state=started enabled=yes
+    when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int >= 23 }}'
+
+  - name: update initial packages (Fedora 21 or less)
+    shell: yum --releasever {{ targetdistrover|int }} update -y fedora-release yum
+    when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int <= 21 }}'
+
+  - name: update initial packages (Fedora 22)
+    shell: dnf --releasever {{ targetdistrover|int }} update -y fedora-release dnf systemd
+    when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int == 22 }}'
+
+  - name: install system upgrade plugin (Fedora 23 or higher)
+    package: name=dnf-plugin-system-upgrade state=present
+    when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int >= 23 }}'
+  - name: execute upgrade (Fedora 23 or higher)
+    shell: dnf system-upgrade download -y --releasever {{ targetdistrover|int }}
+    when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int >= 23 and targetdistrover|int != ansible_distribution_version|int }}'
+  - include: tasks/reboot.yml
+    vars:
+      reboot_command: dnf system-upgrade reboot
+      timeout: 7200
+    when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int >= 23 and targetdistrover|int != ansible_distribution_version|int }}'
+
+  - name: reread variables
+    action: setup
+
+  - name: remove distrover file
+    file: name=/.distupgrade state=absent
+
+  - name: disable debug shell
+    service: name=debug-shell state=stopped enabled=no
+    when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int >= 23 }}'
