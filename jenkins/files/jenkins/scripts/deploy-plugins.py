@@ -1,19 +1,23 @@
 #!/usr/bin/env python
 
+import logging
 import os
 import sys
 import time
-import yaml
+import json
 import zipfile
 
 from httplib import HTTPConnection, HTTPSConnection
 from urlparse import urlparse
 from xml.dom.minidom import parseString
 
+logging.basicConfig(level=logging.INFO)
+
 try:
-    jenkins = yaml.load(sys.argv[1])
+    jenkins = json.loads(sys.argv[1])
 except Exception, e:
     assert 0, (e, sys.argv[1])
+
 
 jenkins_url = jenkins.get("url", "http://localhost:8080")
 netloc = urlparse(jenkins_url).netloc
@@ -41,9 +45,12 @@ def existing_plugins_and_versions():
 
 def request_install_of_plugins(plugins_to_install):
     "Returns changed and could_not_install."
-    to_install = set(plugins_to_install) - set(existing_plugins_and_versions())
+    existing = set(existing_plugins_and_versions())
+    logging.info("Existing plugins and versions: %s", existing)
+    to_install = set(plugins_to_install) - existing
     if not to_install:
         return False, []
+    logging.info("Requesting install of plugins: %s", to_install)
     if to_install:
         shell = '<jenkins>%s</jenkins>'
         plugreq = '<install plugin="%s@latest" />'
@@ -57,9 +64,12 @@ def request_install_of_plugins(plugins_to_install):
             text,
             {"Content-Type": "text/xml"},
         )
-        response = conn.getresponse().read()
+        response = conn.getresponse()
+        data = response.read()
+        assert response.status == 302
     for _ in range(30):
         remaining_to_install = set(plugins_to_install) - set(existing_plugins_and_versions())
+        logging.info("Still remaining to install: %s", remaining_to_install)
         if not remaining_to_install:
             break
         time.sleep(1)
