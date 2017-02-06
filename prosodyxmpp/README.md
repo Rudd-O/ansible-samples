@@ -5,10 +5,12 @@ This Ansible playbook deploys a full Prosody XMPP server on your Fedora 25
 of the server most compatible with [excellent features of modern chat clients
 such as Conversations](https://github.com/siacs/Conversations/blob/master/README.md#xmpp-features).
 
-See the file `vars/xmpp.xml` for more information on how to configure the playbook.
+See the file `vars/xmpp.yml` for more information on how to configure the playbook.
 You may have to configure your Ansible's `hash_behavior` to `merge` dictionaries.
 
-## Firewall notes
+## Prerequisites
+
+### Firewall notes
 
 You will need to open TCP ports:
 
@@ -17,7 +19,7 @@ You will need to open TCP ports:
 * 5269
 * 5281
 
-## SSL notes
+### SSL notes
 
 See the instructions for the mailserver recipe to understand how to configure the
 SSL certificates for your XMPP server.  The SSL certificate must be for the
@@ -26,7 +28,7 @@ machine running the service.
 
 See https://prosody.im/doc/certificates for more information.
 
-## DNS notes
+### DNS notes
 
 You will need to add DNS records for your client to find the server.
 
@@ -62,3 +64,13 @@ _xmpps-server._tcp 18000 IN SRV 0 5 5269 xmpp.example.com.
 ```
 
 See https://prosody.im/doc/dns for more information on the matter.
+
+## Usage
+
+Once you have met the prerequisites, configured the variables in `vars/xmpp.yml` as per your desire, and you have set up the playbook `role-prosodyxmpp.yml` to run against your intended Fedora server, simply run the playbook against it.
+
+Here is a command line example you can run when the working directory containing the playbook is active:
+
+```
+ansible-playbook -v role-prosodyxmpp.yml
+```
