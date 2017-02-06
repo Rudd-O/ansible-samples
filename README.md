@@ -15,6 +15,8 @@ directly into your setup.
    Fedora system which boots from ZFS.
 * [distupgrade/](distupgrade/) upgrades your Fedora machine to a newer
   release, taking appropriate recovery precautions.
+* [prosodyxmpp/](prosodyxmpp/) sets up Prosody XMPP on your Fedora
+  box, with up-to-date XEPS for use with modern XMPP clients.
 
 See `README.md` files inside each directory, when they exist.
 
