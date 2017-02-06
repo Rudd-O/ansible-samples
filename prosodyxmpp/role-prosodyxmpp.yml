@@ -3,9 +3,20 @@
   become: True
   vars:
     xmpp:
-    modules:
-      source: https://hg.prosody.im/prosody-modules/
-      revision: 81956bb99289
+      modules_origin:
+        source: https://hg.prosody.im/prosody-modules/
+        revision: 81956bb99289
+      modules:
+      # compliance with Conversations as per https://github.com/siacs/Conversations
+      - "proxy65"
+      - "smacks"
+      - "smacks_offline"
+      - "carbons"
+      - "mam"
+      - "csi"
+      - "filter_chatstates"
+      - "throttle_presence"
+      - "http_upload"
   vars_files:
   - vars/xmpp.yml
   tasks:
@@ -28,10 +39,10 @@
 
   - name: clone modules directory
     hg:
-      repo: '{{ xmpp.modules.source }}'
+      repo: '{{ xmpp.modules_origin.source }}'
       clone: yes
       dest: /usr/src/prosody/modules
-      revision: '{{ xmpp.modules.revision }}'
+      revision: '{{ xmpp.modules_origin.revision }}'
     become: true
     become_user: nobody
     register: modulesclone

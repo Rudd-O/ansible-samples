@@ -1,14 +1,5 @@
 xmpp:
-  extra_modules: # compliance with Conversations as per https://github.com/siacs/Conversations
-  - "proxy65"
-  - "smacks"
-  - "smacks_offline"
-  - "carbons"
-  - "mam"
-  - "csi"
-  - "filter_chatstates"
-  - "throttle_presence"
-  - "http_upload"
+  extra_modules: []
   global_stanzas:
     http_max_content_size: 104857600
     http_upload_file_size_limit: 104857600
