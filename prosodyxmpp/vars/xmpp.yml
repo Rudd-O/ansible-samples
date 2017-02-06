@@ -1,0 +1,27 @@
+xmpp:
+  extra_modules: # compliance with Conversations as per https://github.com/siacs/Conversations
+  - "proxy65"
+  - "smacks"
+  - "smacks_offline"
+  - "carbons"
+  - "mam"
+  - "csi"
+  - "filter_chatstates"
+  - "throttle_presence"
+  - "http_upload"
+  global_stanzas:
+    http_max_content_size: 104857600
+    http_upload_file_size_limit: 104857600
+  jids:
+    # This only sets the initial password.
+    user@example.com: passwordinplaintext
+ssl:
+  example.com:
+    key:           /etc/pki/tls/private/example.com.key
+    user_may_read: prosody
+    intermediates:
+    # The order matters.  At the bottom of the stack must be the one closest to the root of trust.
+    - /etc/pki/tls/certs/example_com.ca-bundle
+    certificate:   /etc/pki/tls/certs/example_com.crt
+    assembled:     /etc/pki/tls/certs/assembled_example.com.crt
+    assembled_key: /etc/pki/tls/private/assembled_example.com.crtandkey
