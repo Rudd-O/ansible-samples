@@ -6,6 +6,12 @@
       modules_origin:
         source: https://hg.prosody.im/prosody-modules/
         revision: 81956bb99289
+        # You can also say modules_origin: package
+        # and delete the source: and revision: lines, if
+        # your RPM repos contain a package named prosody-modules
+        # that deploys all the modules into /usr/share/prosody-modules
+        # and then, instead of checking out the Mercurial repo,
+        # that prosody-modules RPM will be installed.
       modules:
       # compliance with Conversations as per https://github.com/siacs/Conversations
       - "proxy65"
@@ -24,7 +30,14 @@
     package: name=prosody state=present
     tags: ['prosody']
 
+  - name: install prosody modules
+    package: name=prosody-modules state=present
+    tags: ['prosody']
+    when: '{{ xmpp.modules_origin == "package" }}'
+    register: installprosodymodules
+
   - include: tasks/mercurial.yml
+    when: '{{ xmpp.modules_origin != "package" }}'
 
   - name: create prosody source modules directories
     file:
@@ -36,6 +49,7 @@
     with_items:
     - /usr/src/prosody
     tags: ['prosody']
+    when: '{{ xmpp.modules_origin != "package" }}'
 
   - name: clone modules directory
     hg:
@@ -47,32 +61,35 @@
     become_user: nobody
     register: modulesclone
     tags: ['prosody']
+    when: '{{ xmpp.modules_origin != "package" }}'
 
   - name: create prosody config modules directory
     file:
-      name: /etc/prosody/modules
+      name: /usr/share/prosody-modules
       state: directory
       mode: 0755
       owner: root
       group: root
     tags: ['prosody']
-  
+    when: '{{ xmpp.modules_origin != "package" }}'
+
   - name: symlink obtained modules
     shell: |
       set -e
-      for mod in $( ( cd /usr/src/prosody/modules ; ls -1d mod_* ; cd /etc/prosody/modules ; ls -1d mod_* ) | sort | uniq ) ; do
-        if test -d /usr/src/prosody/modules/"$mod" && test -d /etc/prosody/modules/"$mod" ; then continue ; fi
+      for mod in $( ( cd /usr/src/prosody/modules ; ls -1d mod_* ; cd /usr/share/prosody-modules ; ls -1d mod_* ) | sort | uniq ) ; do
+        if test -d /usr/src/prosody/modules/"$mod" && test -d /usr/share/prosody-modules/"$mod" ; then continue ; fi
         if test -d /usr/src/prosody/modules/"$mod" ; then
-          ln -s /usr/src/prosody/modules/"$mod" /etc/prosody/modules/"$mod"
+          ln -s /usr/src/prosody/modules/"$mod" /usr/share/prosody-modules/"$mod"
           echo "CHANGED: linked $mod" >&2
         elif ! test -d /usr/src/prosody/modules/"$mod" ; then
-          rm -f /etc/prosody/modules/"$mod"
+          rm -f /usr/share/prosody-modules/"$mod"
           echo "CHANGED: unlinked $mod" >&2
         fi
       done
     register: linkmodules
     tags: ['prosody']
     changed_when: '{{ "CHANGED" in linkmodules.stderr }}'
+    when: '{{ xmpp.modules_origin != "package" }}'
 
   - include: tasks/ssl.yml
     tags:
@@ -91,7 +108,7 @@
   - name: enable and start prosody
     service:
       name: prosody
-      state: '{% if (modulesclone is defined and modulesclone.changed) or (linkmodules is defined and linkmodules.changed) or (prosodyconfig is defined and prosodyconfig.changed) or (sslconf is defined and sslconf.changed) %}re{% endif %}started'
+      state: '{% if (modulesclone is defined and modulesclone.changed) or (linkmodules is defined and linkmodules.changed) or (prosodyconfig is defined and prosodyconfig.changed) or (sslconf is defined and sslconf.changed) or (installprosodymodules is defined and installprosodymodules.changed) %}re{% endif %}started'
       enabled: yes
     tags: ['prosody']
 
