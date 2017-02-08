@@ -16,12 +16,12 @@ distribution release.  Here are a few noteworthy points:
 
 Usage:
 
-Every time you want to upgrade your distribution, run the playbook `distupgrade.yml` against it.
+Every time you want to upgrade your distribution, run the playbook `role-distupgrade.yml` against it.
 
-Here is a command line example you can run (perhaps from `cron`) assuming that your host is registered and accessible via SSH at 10.25.43.24, and you are in the working directory containing `distupgrade.yml`:
+Here is a command line example you can run (perhaps from `cron`) assuming that your host is registered and accessible via SSH at 10.25.43.24, and you are in the working directory containing `role-distupgrade.yml`:
 
 ```
-ansible-playbook -v zfsupdates.yml 10.25.43.24
+ansible-playbook -v role-distupgrade.yml 10.25.43.24
 ```
 
 That's all!
