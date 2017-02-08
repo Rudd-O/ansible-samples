@@ -15,11 +15,24 @@
     register: distrovercontent
     when: '{{ ansible_distribution in "Fedora Qubes" }}'
     changed_when: '{{ "CHANGED" in distrovercontent.stderr }}'
+    tags:
+    - after
 
-  - name: set variable up
+  - name: record if there is a kernel package
+    shell: rpm -qa | grep -q ^kernel && echo YES || echo NO
+    register: kernelpkgcontent
+    when: '{{ ansible_distribution in "Fedora Qubes" }}'
+    changed_when: False
+    tags:
+    - after
+
+  - name: set variables up
     set_fact:
       distrover: '{{ distrovercontent.stdout_lines[0] }}'
       targetdistrover: '{{ distrovercontent.stdout_lines[1] }}'
+      kernelpkgavailable: '{{ "YES" in kernelpkgcontent.stdout }}'
+    tags:
+    - after
 
   - name: snapshot ZFS root file system
     shell: |
@@ -47,9 +60,15 @@
   - name: install system upgrade plugin (Fedora 23 or higher)
     package: name=dnf-plugin-system-upgrade state=present
     when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int >= 23 }}'
-  - name: execute upgrade (Fedora 23 or higher)
+
+  - name: execute upgrade (Fedora 23 or higher with kernel packages)
     shell: dnf system-upgrade download -y --releasever {{ targetdistrover|int }}
-    when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int >= 23 and targetdistrover|int != ansible_distribution_version|int }}'
+    when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int >= 23 and targetdistrover|int != ansible_distribution_version|int and kernelpkgavailable }}'
+
+  - name: execute upgrade (Fedora 23 or higher without kernel packages)
+    shell: dnf distro-sync -y --releasever {{ targetdistrover|int }}
+    when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int >= 23 and targetdistrover|int != ansible_distribution_version|int and kernelpkgavailable }}'
+
   - include: tasks/reboot.yml
     vars:
       reboot_command: dnf system-upgrade reboot
@@ -59,9 +78,27 @@
   - name: reread variables
     action: setup
 
+  - name: remove undesirable packages
+    package: name={{ item }} state=absent
+    with_items:
+    - libcacard
+    - nautilus-actions
+    when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int == 20 }}'
+    tags:
+    - purgebadpackages
+    - after
+
+  - include: tasks/updates.yml
+    tags:
+    - after
+
   - name: remove distrover file
     file: name=/.distupgrade state=absent
+    tags:
+    - after
 
   - name: disable debug shell
     service: name=debug-shell state=stopped enabled=no
     when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int >= 23 }}'
+    tags:
+    - after
