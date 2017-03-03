@@ -1,0 +1,4 @@
+- name: install software
+  shell: qubes-dom0-update -y {{ " ".join(packages) }}
+  register: dom0install
+  changed_when: '{{ "Nothing to do" not in dom0install.stdout }}'

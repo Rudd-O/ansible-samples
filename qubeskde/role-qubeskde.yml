@@ -1,0 +1,24 @@
+- hosts: dom0
+  become: true
+  vars:
+    packages:
+    - plasma-workspace
+    - plasma-systemsettings
+    - plasma-breeze
+    - kde-settings-plasma
+    - plasma-desktop
+    - kwin
+    - kscreen
+  tasks:
+  - include: tasks/dom0install.yml
+  - name: fix PAM settings for kscreensaver so the screen can be unlocked
+    shell: |
+      cd /etc/pam.d
+      diff kscreensaver xscreensaver > /dev/null && {
+        echo ALREADY
+      } || {
+        test -f kscreensaver.bak || cp -f kscreensaver kscreensaver.bak
+        cat xscreensaver > kscreensaver
+      }
+    register: kscreensaverfix
+    changed_when: '{{ "ALREADY" not in kscreensaverfix.stdout }}'

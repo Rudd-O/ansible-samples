@@ -17,6 +17,8 @@ directly into your setup.
   release, taking appropriate recovery precautions.
 * [prosodyxmpp/](prosodyxmpp/) sets up Prosody XMPP on your Fedora
   box, with up-to-date XEPS for use with modern XMPP clients.
+* [qubeskde/](qubeskde/) sets up KDE on any Qubes OS dom0, since Qubes OS
+  decided to stop shipping KDE in the dom0.
 
 See `README.md` files inside each directory, when they exist.
 
