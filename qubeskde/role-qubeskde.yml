@@ -24,3 +24,8 @@
       }
     register: kscreensaverfix
     changed_when: '{{ "ALREADY" not in kscreensaverfix.stdout }}'
+  - name: fix color palette
+    shell: test -d "$HOME"/.local/share/qubes-kde || { echo YES ; /usr/bin/qubes-generate-color-palette ; }
+    become: false
+    register: palette
+    changed_when: '{{ "YES" in palette.stdout }}'
