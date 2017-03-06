@@ -10,6 +10,7 @@
     - plasma-desktop
     - kwin
     - kscreen
+    - kde-cli-tools
   tasks:
   - include: tasks/dom0install.yml
   - name: fix PAM settings for kscreensaver so the screen can be unlocked
