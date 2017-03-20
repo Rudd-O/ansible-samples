@@ -16,12 +16,7 @@ distribution release.  Here are a few noteworthy points:
 
 Usage:
 
-Every time you want to upgrade your distribution, run the playbook `role-distupgrade.yml` against it.
-
-Here is a command line example you can run (perhaps from `cron`) assuming that your host is registered and accessible via SSH at 10.25.43.24, and you are in the working directory containing `role-distupgrade.yml`:
-
-```
-ansible-playbook -v role-distupgrade.yml 10.25.43.24
-```
+Every time you want to upgrade your distribution, run the playbook `distupgrade` against it.
+Your task must set `become: yes` for this to be effective.
 
 That's all!

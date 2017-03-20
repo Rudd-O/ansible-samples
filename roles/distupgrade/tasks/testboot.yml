@@ -1,0 +1,26 @@
+- name: test that boot is mounted, abort otherwise
+  shell: |
+      if grep -q /boot /etc/fstab
+      then
+        if ! mountpoint /boot
+        then
+          mount /boot
+          sleep 1
+          mountpoint /boot || {
+            # Oh shit the mount unit is actually associated with a device unit
+            # whose /sys path is obsolete.  Tell systemd to reload the units.
+            systemctl --system daemon-reload
+            mount /boot
+            mountpoint /boot || exit 4
+          }
+          echo CHANGED
+        fi
+      else
+        true
+      fi
+  register: testboot
+  changed_when: testboot.stdout.find("CHANGED") != -1
+  notify: unmount boot
+  tags:
+  - zfs
+  - grub

@@ -13,7 +13,7 @@ directly into your setup.
 * [jenkins/](jenkins/) sets up a Jenkins server with a number of plugins.
 * [zfsupdates/](zfsupdates/) aids you in keeping ZFS up to date on your
    Fedora system which boots from ZFS.
-* [distupgrade/](distupgrade/) upgrades your Fedora machine to a newer
+* [roles/distupgrade/](roles/distupgrade/) upgrades your Fedora machine to a newer
   release, taking appropriate recovery precautions.
 * [prosodyxmpp/](prosodyxmpp/) sets up Prosody XMPP on your Fedora
   box, with up-to-date XEPS for use with modern XMPP clients.

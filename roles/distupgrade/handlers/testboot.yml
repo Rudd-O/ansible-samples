@@ -1,0 +1,2 @@
+- name: unmount boot
+  shell: umount /boot && sync

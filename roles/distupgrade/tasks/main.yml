@@ -1,3 +1,5 @@
+- include: testboot.yml
+
 - name: record source distribution version upgrade and request relabeling if needed
   shell: |
       set -e
