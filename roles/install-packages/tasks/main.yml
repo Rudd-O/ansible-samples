@@ -1,0 +1,22 @@
+- name: install software (dom0)
+  become: true
+  shell: qubes-dom0-update -y {{ " ".join(packages) }}
+  register: qubes_dom0_install
+  when: '{{ ansible_distribution == "Qubes" }}'
+  changed_when: '{{ "Nothing to do" not in qubes_dom0_install.stdout }}'
+
+- name: install software (non-dom0)
+  become: true
+  package: name='{{ item }}' state=present
+  when: '{{ ansible_distribution != "Qubes" }}'
+  register: normal_package_install
+  with_items: '{{ packages }}'
+
+- name: set package_install variable
+  set_fact:
+    package_install: '{{ qubes_dom0_install|default(None) }}'
+  when: '{{ ansible_distribution == "Qubes" }}'
+- name: set package_install variable
+  set_fact:
+    package_install: '{{ normal_package_install|default(None) }}'
+  when: '{{ ansible_distribution != "Qubes" }}'
