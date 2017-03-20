@@ -7,7 +7,7 @@
 
 - name: install software (non-dom0)
   become: true
-  package: name='{{ item }}' state=present
+  package: name='{{ item }}' state={{ state|default("present") }}
   when: '{{ ansible_distribution != "Qubes" }}'
   register: normal_package_install
   with_items: '{{ packages }}'
