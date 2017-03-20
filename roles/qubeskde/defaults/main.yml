@@ -1,0 +1,10 @@
+packages:
+- plasma-workspace
+- plasma-systemsettings
+- plasma-breeze
+- plasma-breeze-qubes
+- kde-settings-plasma
+- plasma-desktop
+- kwin
+- kscreen
+- kde-cli-tools
