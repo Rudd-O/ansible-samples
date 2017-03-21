@@ -75,6 +75,10 @@
   package: name=dnf-plugin-system-upgrade state=present
   when: '{{ ansible_distribution in "Fedora" and distrover|int >= 23 }}'
 
+- name: execute upgrade (Fedora 22)
+  shell: dnf upgrade -y --releasever {{ targetdistrover|int }}
+  when: '{{ ansible_distribution in "Fedora" and distrover|int == 22 }}'
+
 - name: execute upgrade (Fedora 23 or higher with kernel packages)
   shell: dnf system-upgrade download -y --releasever {{ targetdistrover|int }}
   when: '{{ ansible_distribution in "Fedora" and distrover|int >= 23 and targetdistrover|int != ansible_distribution_version|int and kernelpkgavailable }}'
