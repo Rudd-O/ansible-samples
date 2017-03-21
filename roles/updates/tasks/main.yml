@@ -45,7 +45,7 @@
 
 - name: clean downloaded yum packages
   shell: test -f /usr/bin/dnf && { dnf clean packages ; } || { yum clean packages ; }
-  when: ansible_distribution in "Fedora" and inventory_hostname in groups["qubes-managed-templates"] and (do_updates_dnf.changed|default(False))
+  when: ansible_distribution in "Fedora" and inventory_hostname in groups["qubes-managed-templates"]|default([]) and (do_updates_dnf.changed|default(False))
   register: clean_updates
   changed_when: "'0 packages removed' not in clean_updates.stdout"
 
