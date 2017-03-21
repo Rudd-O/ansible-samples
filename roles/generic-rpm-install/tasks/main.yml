@@ -3,41 +3,46 @@
 # Conforms to the latest Deployment policies.md in the documentation.
 
 - name: create shared directory for packages
-  file: name='/var/cache/generic-rpm-install/{{ project }}/packages' state=directory owner=root group=root mode=0755
-  when: ansible_distribution in "Fedora Qubes"
+  file: name='{{ generic_rpm_install.package_cache_root }}/{{ project }}/packages' state=directory owner=root group=root mode=0755
+  when: '{{ ansible_distribution in "Fedora Qubes" }}'
   tags:
   - generic_rpm_install
 
 - name: clean obsolete files in shared directory
   file: name='/usr/src/{{ project }}' state=absent
-  when: ansible_distribution in "Fedora Qubes"
+  when: '{{ ansible_distribution in "Fedora Qubes" }}'
   tags:
   - generic_rpm_install
 
 - name: synchronize updated RPMs
   copy:
-    src: '{{ source|default("files/deliverables/" + project) }}/'
-    dest: /var/cache/generic-rpm-install/{{ project }}/packages/
-  when: ansible_distribution in "Fedora Qubes" and ansible_connection == "qubes"
+    src: '{{ generic_rpm_install.package_source + "/" + project) }}/'
+    dest: {{ generic_rpm_install.package_cache_root }}/{{ project }}/packages/
+  when: '{{ ansible_distribution in "Fedora Qubes" and ansible_connection == "qubes" }}'
   tags:
   - synchronize
   - generic_rpm_install
 
 - name: synchronize updated RPMs
   synchronize:
-    src: '{{ source|default("files/deliverables/" + project) }}/'
-    dest: /var/cache/generic-rpm-install/{{ project }}/packages/
+    src: '{{ generic_rpm_install.package_source + "/" + project) }}/'
+    dest: {{ generic_rpm_install.package_cache_root }}/{{ project }}/packages/
     archive: False
     recursive: yes
     times: yes
-  when: ansible_distribution in "Fedora Qubes" and ansible_connection != "qubes"
+  when: '{{ ansible_distribution in "Fedora Qubes" and ansible_connection != "qubes" }}'
   tags:
   - zfs
   - synchronize
   - generic_rpm_install
 
-- include: createrepo.yml
-  when: ansible_distribution in "Fedora Qubes"
+- name: install createrepo
+  include_role:
+    name: install-packages
+  vars:
+    packages:
+    - createrepo
+  when: '{{ ansible_distribution in "Fedora Qubes" }}'
   tags:
   - generic_rpm_install
 
@@ -46,7 +51,7 @@
     content: |
         [{{ project }}]
         name={{ project }} for $releasever - $basearch
-        baseurl=file:///var/cache/generic-rpm-install/{{ project }}/{% if inventory_hostname in groups["qubes-dom0s"] %}q{% else %}fc{% endif %}$releasever
+        baseurl=file://{{ generic_rpm_install.package_cache_root }}/{{ project }}/{% if inventory_hostname in groups["qubes-dom0s"] %}q{% else %}fc{% endif %}$releasever
         enabled=1
         gpgcheck={% if gpgcheck|default(False) %}1{% else %}0{% endif %}
 
@@ -55,7 +60,7 @@
     mode: 0644
     owner: root
     group: root
-  when: ansible_distribution in "Fedora Qubes" and configrepo|default(True)
+  when: '{{ ansible_distribution in "Fedora Qubes" and generic_rpm_install.configrepo }}'
   register: repofile
   tags:
   - generic_rpm_install
@@ -63,7 +68,7 @@
 - name: update repository
   shell: |
       set -e
-      cd '/var/cache/generic-rpm-install/{{ project }}'
+      cd '{{ generic_rpm_install.package_cache_root }}/{{ project }}'
       for f in newpkglist pkglist repodata ; do
           if test -e "$f" ; then
               rm -fr "$f"
@@ -95,7 +100,7 @@
       done
       {% if ansible_distribution == "Qubes" %}
       # This is a Qubes OS dom0.  Link the necessary things.
-      {%   for qubesver, fedoraver in qubes_fedora_map.items() %}
+      {%   for qubesver, fedoraver in generic_rpm_install.qubes_fedora_map.items() %}
       if ! test -L "q{{ qubesver }}" ; then
           echo "RELINK $qubesver to $fedoraver"
           rm -f "q{{ qubesver }}" */"q{{ qubesver }}"
@@ -103,11 +108,7 @@
       fi
       {%   endfor %}
       {% endif %}
-  when: ansible_distribution in "Fedora Qubes"
-  vars:
-    qubes_fedora_map:
-      3.1: 20
-      3.2: 23
+  when: '{{ ansible_distribution in "Fedora Qubes" }}'
   register: updaterepo
   changed_when: "{{ 'REGEN' in updaterepo.stdout or 'RELINK' in updaterepo.stdout }}"
   tags:
@@ -115,11 +116,13 @@
 
 - name: install package
   package: pkg={{ package }} state=latest
-  when: ansible_distribution in "Fedora Qubes" and package is defined
+  when: '{{ ansible_distribution in "Fedora Qubes" and package is defined }}'
   tags:
   - generic_rpm_install
   register: generic_rpm_install
 
 - set_fact:
     '{{ register_var|default("generic_rpm_install") }}': '{{ generic_rpm_install }}'
-  when: '{{ register_var is defined }}'
+  when: '{{ ansible_distribution in "Fedora Qubes" and register_var is defined }}'
+  tags:
+  - generic_rpm_install

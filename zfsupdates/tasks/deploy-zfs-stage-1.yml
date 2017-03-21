@@ -1,6 +1,8 @@
 - file: name=/usr/src/zfsupdates state=absent
 
-- include: generic-rpm-install.yml
+- name: Deploy ZFS repository using generic RPM install
+  include_role:
+    name: generic-rpm-install
   vars:
     project: zfsupdates
   tags:

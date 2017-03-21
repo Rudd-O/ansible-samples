@@ -1,6 +1,6 @@
 - name: install software (dom0)
   become: true
-  shell: qubes-dom0-update -y {{ " ".join(packages) }}
+  shell: rpm -q {{ " ".join(packages) }} || qubes-dom0-update -y {{ " ".join(packages) }}
   register: qubes_dom0_install
   when: '{{ ansible_distribution == "Qubes" }}'
   changed_when: '{{ "Nothing to do" not in qubes_dom0_install.stdout }}'
