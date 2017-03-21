@@ -16,7 +16,7 @@
 
 - name: synchronize updated RPMs
   copy:
-    src: '{{ generic_rpm_install.package_source + "/" + project) }}/'
+    src: '{{ generic_rpm_install.package_source + "/" + project }}/'
     dest: '{{ generic_rpm_install.package_cache_root }}/{{ project }}/packages/'
   when: '{{ ansible_distribution in "Fedora Qubes" and ansible_connection == "qubes" }}'
   tags:
@@ -25,7 +25,7 @@
 
 - name: synchronize updated RPMs
   synchronize:
-    src: '{{ generic_rpm_install.package_source + "/" + project) }}/'
+    src: '{{ generic_rpm_install.package_source + "/" + project }}/'
     dest: '{{ generic_rpm_install.package_cache_root }}/{{ project }}/packages/'
     archive: False
     recursive: yes
