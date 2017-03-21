@@ -1,17 +1,6 @@
 ---
 - hosts: all
   become: True
-  vars:
-    zfs_packages:
-    - libuutil1
-    - libzpool2
-    - libnvpair1
-    - libzfs2
-    - spl
-    - zfs
-    - spl-dkms
-    - zfs-dkms
-    - zfs-dracut
   tasks:
   - include: tasks/deploy-zfs-repo.yml
     when: ansible_distribution in "Fedora Qubes"

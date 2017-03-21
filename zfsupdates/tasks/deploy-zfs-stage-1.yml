@@ -1,5 +1,17 @@
 - file: name=/usr/src/zfsupdates state=absent
 
+- include: generic-rpm-install.yml
+  vars:
+    project: zfsupdates
+  tags:
+  - zfs
+  when: '{{ generic_rpm_install|default(False) and ansible_distribution in "Fedora Qubes" }}'
+
+- include: deploy-zfs-repo.yml
+  when: '{{ not generic_rpm_install|default(False) and ansible_distribution in "Fedora Qubes" }}'
+  tags:
+  - zfs
+
 - name: discover package manager config
   shell: if test -f /etc/dnf/dnf.conf ; then echo -n /etc/dnf/dnf.conf ; else echo -n /etc/yum.conf ; fi
   check_mode: no
@@ -16,7 +28,7 @@
     section: main
     option: installonlypkgs
     value: kernel, kernel-modules, kernel-core, kernel-devel
-  when: "{{ 'qubes-dom0s' not in groups or inventory_hostname not in groups['qubes-dom0s'] }}"
+  when: "{{ ansible_distribution != 'Qubes' }}"
   tags:
   - zfs
   - yum
@@ -30,7 +42,7 @@
     fi
   register: insertmarker
   changed_when: "{{ 'CHANGED' in insertmarker.stdout }}"
-  when: "{{ 'qubes-dom0s' in groups and inventory_hostname in groups['qubes-dom0s'] }}"
+  when: "{{ ansible_distribution == 'Qubes' }}"
   tags:
   - zfs
   - yum
@@ -41,34 +53,55 @@
     dest: "{{ pkgconffile.stdout }}"
     marker: "### ANSIBLE {mark} ###"
     content: "installonlypkgs=kernel, kernel-modules, kernel-core, kernel-devel, kernel-qubes-vm"
-  when: "{{ 'qubes-dom0s' in groups and inventory_hostname in groups['qubes-dom0s'] }}"
+  when: "{{ ansible_distribution == 'Qubes' }}"
   tags:
   - zfs
   - yum
   - ini
 
 - name: test for build dependencies in dom0
-  action: shell rpm -q automake rpm-build libtool libuuid-devel libblkid-devel zlib-devel make ksh || echo NO
+  action: shell rpm -q {{ packages|join(" ") }} || echo NO
+  vars:
+    packages:
+    - automake
+    - rpm-build
+    - libtool
+    - libuuid-devel
+    - libblkid-devel
+    - zlib-devel
+    - make
+    - ksh
   register: can_build
-  when: '{{ "qubes-dom0s" in groups and inventory_hostname in groups["qubes-dom0s"] }}'
+  when: "{{ ansible_distribution == 'Qubes' }}"
   changed_when: False
   check_mode: no
 
 - name: install build dependencies in dom0
   shell: qubes-dom0-update -y git automake rpm-build libtool libuuid-devel libblkid-devel zlib-devel make ksh
-  when: '{{ "qubes-dom0s" in groups and inventory_hostname in groups["qubes-dom0s"] and "NO" in can_build.stdout }}'
+  when: "{{ ansible_distribution == 'Qubes' and 'NO' in can_build.stdout }}"
 
 - name: upgrade ZFS RPMs
   package: name={{ item }} state=latest
+  vars:
+    zfs_packages:
+    - libuutil1
+    - libzpool2
+    - libnvpair1
+    - libzfs2
+    - spl
+    - zfs
+    - spl-dkms
+    - zfs-dkms
+    - zfs-dracut
   with_items: '{{ zfs_packages }}'
-  when: "{{ 'qubes-dom0s' not in groups or inventory_hostname not in groups['qubes-dom0s'] }}"
+  when: "{{ ansible_distribution == 'Qubes' }}"
   register: upgrade_zfs_nondom0
   tags:
   - zfs
 
 - name: upgrade ZFS RPMs for Qubes dom0s
   shell: rpm -q {{ " ".join(zfs_packages) }} || qubes-dom0-update -y {{ " ".join(zfs_packages) }}
-  when: '{{ "qubes-dom0s" in groups and inventory_hostname in groups["qubes-dom0s"] }}'
+  when: '{{ ansible_distribution == "Qubes" }}'
   register: upgrade_zfs_dom0
   changed_when: '{{ upgrade_zfs_dom0.stdout.find("Nothing to do.") == -1 }}'
 
