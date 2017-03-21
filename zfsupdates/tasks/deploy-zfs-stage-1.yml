@@ -80,9 +80,8 @@
   shell: qubes-dom0-update -y git automake rpm-build libtool libuuid-devel libblkid-devel zlib-devel make ksh
   when: "{{ ansible_distribution == 'Qubes' and 'NO' in can_build.stdout }}"
 
-- name: upgrade ZFS RPMs
-  package: name={{ item }} state=latest
-  vars:
+- name: set ZFS packages variables
+  set_fact
     zfs_packages:
     - libuutil1
     - libzpool2
@@ -93,6 +92,9 @@
     - spl-dkms
     - zfs-dkms
     - zfs-dracut
+
+- name: upgrade ZFS RPMs
+  package: name={{ item }} state=latest
   with_items: '{{ zfs_packages }}'
   when: "{{ ansible_distribution == 'Qubes' }}"
   register: upgrade_zfs_nondom0
