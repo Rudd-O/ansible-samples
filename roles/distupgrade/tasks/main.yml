@@ -10,7 +10,10 @@
         selinuxenabled && touch /.autorelabel || true
       fi
       cat /.distupgrade
+
+      {% if ansible_check_mode|default(False) %}rm -f /.distupgrade /.autorelabel{% endif %}
   register: distrovercontent
+  check_mode: no
   when: '{{ ansible_distribution in "Fedora Qubes" }}'
   changed_when: '{{ "CHANGED" in distrovercontent.stderr }}'
   tags:
@@ -18,6 +21,7 @@
 
 - name: record if there is a kernel package
   shell: rpm -qa | grep -q ^kernel && echo YES || echo NO
+  check_mode: no
   register: kernelpkgcontent
   when: '{{ ansible_distribution in "Fedora Qubes" }}'
   changed_when: False
@@ -35,7 +39,7 @@
 - name: snapshot ZFS root file system
   shell: |
     rootdataset=$(zfs list / -H -o name) || exit 0
-    sname="$rootdataset@distupgrade-from-{{ distrover }}-to-{{ distrover }}"
+    sname="$rootdataset@distupgrade-from-{{ distrover }}-to-{{ targetdistrover }}"
     zfs list "$sname" -H -o name || {
       zfs snapshot "$sname" || exit 5
       echo CHANGEDCHANGED >&2
