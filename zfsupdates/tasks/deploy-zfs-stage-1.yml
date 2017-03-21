@@ -93,15 +93,15 @@
     - zfs-dkms
     - zfs-dracut
 
-- name: upgrade ZFS RPMs
+- name: upgrade ZFS RPMs (Fedora)
   package: name={{ item }} state=latest
   with_items: '{{ zfs_packages }}'
-  when: "{{ ansible_distribution == 'Qubes' }}"
+  when: "{{ ansible_distribution != 'Qubes' }}"
   register: upgrade_zfs_nondom0
   tags:
   - zfs
 
-- name: upgrade ZFS RPMs for Qubes dom0s
+- name: upgrade ZFS RPMs (Qubes)
   shell: rpm -q {{ " ".join(zfs_packages) }} || qubes-dom0-update -y {{ " ".join(zfs_packages) }}
   when: '{{ ansible_distribution == "Qubes" }}'
   register: upgrade_zfs_dom0
