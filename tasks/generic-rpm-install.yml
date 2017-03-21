@@ -95,7 +95,7 @@
       done
       {% if ansible_distribution == "Qubes" %}
       # This is a Qubes OS dom0.  Link the necessary things.
-      {%   for qubesver, fedoraver in generic_rpm_install.qubes_fedora_map.items() %}
+      {%   for qubesver, fedoraver in qubes_fedora_map.items() %}
       if ! test -L "q{{ qubesver }}" ; then
           echo "RELINK $qubesver to $fedoraver"
           rm -f "q{{ qubesver }}" */"q{{ qubesver }}"
