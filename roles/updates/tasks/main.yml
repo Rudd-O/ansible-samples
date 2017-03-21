@@ -17,7 +17,7 @@
   - zfs
 
 - name: update yum packages for non-qubes dom0s
-  package: state=latest name=* enablerepo={{ (inventory_hostname in groups["qubes-persistent"] and 'qubes-vm-*-security-testing') | default(omit) }}
+  package: state=latest name=* enablerepo='qubes-vm-*-security-testing'
   when: '{{ ansible_distribution in "Fedora" }}'
   register: do_updates_dnf
 
