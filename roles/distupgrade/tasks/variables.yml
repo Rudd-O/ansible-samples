@@ -1,0 +1,53 @@
+- name: record source distribution version upgrade and request relabeling if needed
+  shell: |
+      set -e
+      if ! test -f /.distupgrade ; then
+        echo CHANGED >> /dev/stderr
+        echo {{ ansible_distribution_version }} > /.distupgrade
+        echo {{ ansible_distribution_version|int + 1 }} >> /.distupgrade
+        selinuxenabled && touch /.autorelabel || true
+      fi
+      cat /.distupgrade
+
+      {% if ansible_check_mode|default(False) %}rm -f /.distupgrade /.autorelabel{% endif %}
+  register: distrovercontent
+  check_mode: no
+  changed_when: '{{ "CHANGED" in distrovercontent.stderr }}'
+
+- name: record if there is a kernel package
+  shell: rpm -qa | grep -q ^kernel && echo YES || echo NO
+  check_mode: no
+  register: kernelpkgcontent
+  changed_when: False
+
+- name: set variables up
+  set_fact:
+    distrover: '{{ distrovercontent.stdout_lines[0] }}'
+    targetdistrover: '{{ distrovercontent.stdout_lines[1] }}'
+    kernelpkgavailable: '{{ "YES" in kernelpkgcontent.stdout }}'
+    base_packages: fedora-release dnf systemd
+
+- name: decide whether to manage debug shell
+  set_fact:
+    debug_shell: {% if distrover|int >= 23 %}yes{% else %}no{% endif %}
+  when: '{{ method is not defined and ansible_distribution in "Fedora" and distrover|int == 22 and targetdistrover|int != ansible_distribution_version|int }}'
+
+- name: set method to dnf-upgrade
+  set_fact:
+    method: dnf-upgrade
+  when: '{{ method is not defined and ansible_distribution in "Fedora" and distrover|int == 22 and targetdistrover|int != ansible_distribution_version|int }}'
+
+- name: set method to system-upgrade
+  set_fact:
+    method: system-upgrade
+  when: '{{ method is not defined and ansible_distribution in "Fedora" and distrover|int >= 23 and targetdistrover|int != ansible_distribution_version|int and kernelpkgavailable }}'
+
+- name: set method to distro-sync
+  set_fact:
+    method: distro-sync
+  when: '{{ method is not defined and ansible_distribution in "Fedora" and distrover|int >= 23 and targetdistrover|int != ansible_distribution_version|int and not kernelpkgavailable }}'
+
+- name: set method to qubes-dom0-update
+  set_fact:
+    method: qubes-dom0-update
+  when: '{{ method is not defined and ansible_distribution in "Qubes" }}'

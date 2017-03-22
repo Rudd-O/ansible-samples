@@ -1,127 +1,17 @@
 - include: testboot.yml
 
-- name: record source distribution version upgrade and request relabeling if needed
-  shell: |
-      set -e
-      if ! test -f /.distupgrade ; then
-        echo CHANGED >> /dev/stderr
-        echo {{ ansible_distribution_version }} > /.distupgrade
-        echo {{ ansible_distribution_version|int + 1 }} >> /.distupgrade
-        selinuxenabled && touch /.autorelabel || true
-      fi
-      cat /.distupgrade
-
-      {% if ansible_check_mode|default(False) %}rm -f /.distupgrade /.autorelabel{% endif %}
-  register: distrovercontent
-  check_mode: no
+- include: variables.yml
   when: '{{ ansible_distribution in "Fedora Qubes" }}'
-  changed_when: '{{ "CHANGED" in distrovercontent.stderr }}'
   tags:
   - after
 
-- name: record if there is a kernel package
-  shell: rpm -qa | grep -q ^kernel && echo YES || echo NO
-  check_mode: no
-  register: kernelpkgcontent
+- include: prepare.yml
   when: '{{ ansible_distribution in "Fedora Qubes" }}'
-  changed_when: False
-  tags:
-  - after
 
-- name: set variables up
-  set_fact:
-    distrover: '{{ distrovercontent.stdout_lines[0] }}'
-    targetdistrover: '{{ distrovercontent.stdout_lines[1] }}'
-    kernelpkgavailable: '{{ "YES" in kernelpkgcontent.stdout }}'
-  tags:
-  - after
+- include: upgrade.yml
+  when: '{{ ansible_distribution in "Fedora Qubes" }}'
 
-- name: snapshot ZFS root file system
-  shell: |
-    rootdataset=$(zfs list / -H -o name) || exit 0
-    sname="$rootdataset@distupgrade-from-{{ distrover }}-to-{{ targetdistrover }}"
-    zfs list "$sname" -H -o name || {
-      zfs snapshot "$sname" || exit 5
-      echo CHANGEDCHANGED >&2
-    }
-  register: zfssnap
-  changed_when: '{{ "CHANGEDCHANGED" in zfssnap.stderr }}'
-
-- name: enable debug shell
-  service: name=debug-shell state=started enabled=yes
-  when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int >= 23 }}'
-
-- name: update initial packages (Fedora 21 or less)
-  shell: yum --releasever {{ targetdistrover|int }} update -y fedora-release yum
-  when: '{{ ansible_distribution in "Fedora" and distrover|int <= 21 }}'
-
-- name: update initial packages (Fedora 22)
-  shell: dnf --releasever {{ targetdistrover|int }} update -y fedora-release dnf systemd
-  when: '{{ ansible_distribution in "Fedora" and distrover|int == 22 }}'
-
-- name: update initial packages (Qubes)
-  shell: qubes-dom0-update -y {{ " ".join(packages) }} --releasever {{ targetdistrover|int }}
-  vars:
-    packages:
-    - fedora-release
-    - dnf
-    - systemd
-    state: updated
-  register: qubes_dom0_base_package_upgrade
-  changed_when: '{{ "Nothing to do" not in qubes_dom0_base_package_upgrade.stdout }}'
-  when: '{{ ansible_distribution in "Qubes" }}'
-
-- name: install system upgrade plugin (Fedora 23 or higher)
-  package: name=dnf-plugin-system-upgrade state=present
-  when: '{{ ansible_distribution in "Fedora" and distrover|int >= 23 }}'
-
-- name: execute upgrade (Fedora 22)
-  shell: dnf upgrade -y --releasever {{ targetdistrover|int }}
-  when: '{{ ansible_distribution in "Fedora" and distrover|int == 22 }}'
-
-- name: execute upgrade (Fedora 23 or higher with kernel packages)
-  shell: dnf system-upgrade download -y --releasever {{ targetdistrover|int }}
-  when: '{{ ansible_distribution in "Fedora" and distrover|int >= 23 and targetdistrover|int != ansible_distribution_version|int and kernelpkgavailable }}'
-
-- name: execute upgrade (Fedora 23 or higher without kernel packages)
-  shell: dnf distro-sync -y --releasever {{ targetdistrover|int }}
-  when: '{{ ansible_distribution in "Fedora" and distrover|int >= 23 and targetdistrover|int != ansible_distribution_version|int and not kernelpkgavailable }}'
-
-- name: execute upgrade (Qubes)
-  shell: qubes-dom-update -y --releasever {{ targetdistrover|int }}
-  when: '{{ ansible_distribution in "Qubes" }}'
-
-- include: reboot.yml
-  vars:
-    reboot_command: dnf system-upgrade reboot
-    timeout: 7200
-  when: '{{ ansible_distribution in "Fedora" and distrover|int >= 23 and targetdistrover|int != ansible_distribution_version|int }}'
-
-- name: reread variables
-  action: setup
-
-- name: remove undesirable packages
-  package: name={{ item }} state=absent
-  with_items:
-  - libcacard
-  - nautilus-actions
-  when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int == 20 }}'
-  tags:
-  - purgebadpackages
-  - after
-
-- include_role:
-    name: updates
-  tags:
-  - after
-
-- name: remove distrover file
-  file: name=/.distupgrade state=absent
-  tags:
-  - after
-
-- name: disable debug shell
-  service: name=debug-shell state=stopped enabled=no
-  when: '{{ ansible_distribution in "Fedora Qubes" and distrover|int >= 23 }}'
+- include: cleanup.yml
+  when: '{{ ansible_distribution in "Fedora Qubes" }}'
   tags:
   - after

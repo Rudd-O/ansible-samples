@@ -1,0 +1,14 @@
+- name: snapshot ZFS root file system
+  shell: |
+    rootdataset=$(zfs list / -H -o name) || exit 0
+    sname="$rootdataset@distupgrade-from-{{ distrover }}-to-{{ targetdistrover }}"
+    zfs list "$sname" -H -o name || {
+      zfs snapshot "$sname" || exit 5
+      echo CHANGEDCHANGED >&2
+    }
+  register: zfssnap
+  changed_when: '{{ "CHANGEDCHANGED" in zfssnap.stderr }}'
+
+- name: enable debug shell
+  service: name=debug-shell state=started enabled=yes
+  when: '{{ debug_shell }}

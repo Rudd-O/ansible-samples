@@ -1,0 +1,18 @@
+- name: reread variables
+  action: setup
+
+- include_role:
+    name: updates
+  tags:
+  - after
+
+- name: remove distrover file
+  file: name=/.distupgrade state=absent
+  tags:
+  - after
+
+- name: disable debug shell
+  service: name=debug-shell state=stopped enabled=no
+  when: '{{ debug_shell }}
+  tags:
+  - after
