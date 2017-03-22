@@ -34,17 +34,17 @@
 - name: set method to dnf-upgrade
   set_fact:
     method: dnf-upgrade
-  when: '{{ method is not defined and ansible_distribution in "Fedora" and distrover|int == 22 and targetdistrover|int != ansible_distribution_version|int }}'
+  when: '{{ method is not defined and ansible_distribution in "Fedora" and distrover|int == 22 }}'
 
 - name: set method to system-upgrade
   set_fact:
     method: system-upgrade
-  when: '{{ method is not defined and ansible_distribution in "Fedora" and distrover|int >= 23 and targetdistrover|int != ansible_distribution_version|int and kernelpkgavailable }}'
+  when: '{{ method is not defined and ansible_distribution in "Fedora" and distrover|int >= 23 and kernelpkgavailable }}'
 
 - name: set method to distro-sync
   set_fact:
     method: distro-sync
-  when: '{{ method is not defined and ansible_distribution in "Fedora" and distrover|int >= 23 and targetdistrover|int != ansible_distribution_version|int and not kernelpkgavailable }}'
+  when: '{{ method is not defined and ansible_distribution in "Fedora" and distrover|int >= 23 and not kernelpkgavailable }}'
 
 - name: set method to qubes-dom0-update
   set_fact:
