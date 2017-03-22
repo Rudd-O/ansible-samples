@@ -1,15 +1,18 @@
 - name: record source distribution version upgrade and request relabeling if needed
   shell: |
       set -e
+      created=
       if ! test -f /.distupgrade ; then
+        created=true
         echo CHANGED >> /dev/stderr
         echo {{ ansible_distribution_version }} > /.distupgrade
         echo {{ ansible_distribution_version|int + 1 }} >> /.distupgrade
-        selinuxenabled && touch /.autorelabel || true
+        {% if ansible_check_mode|default(False) %}selinuxenabled && touch /.autorelabel || true{% endif %}
+
       fi
       cat /.distupgrade
 
-      {% if ansible_check_mode|default(False) %}rm -f /.distupgrade /.autorelabel{% endif %}
+      {% if ansible_check_mode|default(False) %}test -n "$created" && rm -f /.distupgrade || true{% endif %}
   register: distrovercontent
   check_mode: no
   changed_when: '{{ "CHANGED" in distrovercontent.stderr }}'
