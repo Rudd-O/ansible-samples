@@ -13,6 +13,6 @@
 
 - name: disable debug shell
   service: name=debug-shell state=stopped enabled=no
-  when: '{{ debug_shell }}
+  when: '{{ debug_shell }}'
   tags:
   - after
