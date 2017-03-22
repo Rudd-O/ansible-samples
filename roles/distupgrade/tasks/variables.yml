@@ -30,7 +30,6 @@
 - name: decide whether to manage debug shell
   set_fact:
     debug_shell: '{% if distrover|int >= 23 %}yes{% else %}no{% endif %}'
-  when: '{{ method is not defined and ansible_distribution in "Fedora" and distrover|int == 22 and targetdistrover|int != ansible_distribution_version|int }}'
 
 - name: set method to dnf-upgrade
   set_fact:
