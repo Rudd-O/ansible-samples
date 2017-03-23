@@ -1,9 +1,9 @@
 ---
 
 - name: upload jenkins repo file
-  copy: src=files/jenkins/etc/yum.repos.d/jenkins.repo dest=/etc/yum.repos.d/jenkins.repo
+  copy: src=files/etc/yum.repos.d/jenkins.repo dest=/etc/yum.repos.d/jenkins.repo
 - name: upload jenkins key file
-  copy: src=files/jenkins/etc/pki/rpm-gpg/jenkins-ci.org.key dest=/etc/pki/rpm-gpg/jenkins-ci.org.key
+  copy: src=files/etc/pki/rpm-gpg/jenkins-ci.org.key dest=/etc/pki/rpm-gpg/jenkins-ci.org.key
 
 - include: gnupg.yml
 - name: install jenkins key file
@@ -13,18 +13,19 @@
   package: name=fontconfig,dejavu-sans-fonts,java-openjdk-headless,jenkins state=present
 
 - name: copy jenkins configs
-  template: src="files/jenkins/var/lib/jenkins/{{ item }}" dest="/var/lib/jenkins/{{ item }}" owner=jenkins group=jenkins mode=0600
+  template:
+    src: "files/var/lib/jenkins/{{ item.key }}"
+    dest: "/var/lib/jenkins/{{ item.key }}"
+    owner: jenkins
+    group: jenkins
+    mode: '{{ item.value }}'
+    backup: true
   notify: restart jenkins
-  with_items:
-  - config.xml
-  - hudson.tasks.Mailer.xml
-  - jenkins.model.JenkinsLocationConfiguration.xml
-
-- name: copy jenkins public configs
-  template: src="files/jenkins/var/lib/jenkins/{{ item }}" dest="/var/lib/jenkins/{{ item }}" owner=jenkins group=jenkins mode=0644
-  notify: restart jenkins
-  with_items:
-  - nodeMonitors.xml
+  with_dict:
+    config.xml: '0644'
+    hudson.tasks.Mailer.xml: '0600'
+    jenkins.model.JenkinsLocationConfiguration.xml: '0600'
+    nodeMonitors.xml: '0644'
 
 # may be needed in the future
 # /etc/tmpfiles.d/jenkins.conf:
@@ -103,9 +104,9 @@
 - name: ensure dumb file gone
   file: state=absent name=/var/lib/jenkins/secret.key.not-so-secret
 
-- name: download Jenkins keypair for the root user
+- name: download Jenkins secrets to local secrets store
   fetch:
-    dest: files/secrets/jenkins/{{ inventory_hostname }}/{{ item }}
+    dest: '{{ jenkins.local_secrets_store }}/{{ item }}'
     src: /var/lib/jenkins/{{ item }}
     flat: yes
     validate_checksum: no

@@ -1,0 +1,6 @@
+jenkins:
+  url: http://localhost:8080/
+  # Provide a list of plugin names to install.
+  plugins: []
+  # This is the local path where the playbook will download Jenkins' secrets to.
+  local_secrets_store: files/secrets/jenkins

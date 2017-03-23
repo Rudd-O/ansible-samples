@@ -1,0 +1,11 @@
+---
+- name: ensure yaml is available
+  package: name=PyYAML state=present
+  when: '{{ jenkins.plugins }}'
+
+- name: install jenkins plugin
+  script: scripts/deploy-plugins.py {{ jenkins | to_json | quote }}
+  when: '{{ jenkins.plugins }}'
+  register: jenkinsplugins
+  changed_when: '"CHANGED" in jenkinsplugins.stdout'
+  notify: restart jenkins

@@ -5,7 +5,7 @@
     <string>jenkins.diagnostics.SecurityIsOffMonitor</string>
     <string>jenkins.security.RekeySecretAdminMonitor</string>
   </disabledAdministrativeMonitors>
-  <version>1.570</version>
+  <version>2.22</version>
   <numExecutors>4</numExecutors>
   <mode>NORMAL</mode>
   <useSecurity>true</useSecurity>

@@ -1,0 +1,4 @@
+- include: tasks/jenkins.yml
+- include: tasks/jenkins-plugin.yml
+  tags:
+  - jenkins-plugins
