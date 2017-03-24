@@ -153,7 +153,7 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
                 warnings = res['warnings']
                 del res['warnings']
                 for i, v in enumerate(warnings):
-                    warnings[i] = stringc(v, C.COLOR_WARN)
+                    warnings[i] = LiteralText(stringc(v, C.COLOR_WARN))
                 res[stringc("warnings", C.COLOR_WARN)] = warnings
         for banned in ["invocation", "stdout_lines", "stderr_lines",
                        "changed", "failed", "skipped", "unreachable",
