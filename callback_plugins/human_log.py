@@ -134,7 +134,7 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
         if task.action == "service" and "status" in res:
             if hasattr(res["status"], "keys") and len(res["status"]) > 3:
                 del res["status"]
-        for x in ['stdout', 'stderr']:
+        for x in ['stdout', 'stderr', 'include_variables']:
             if x in res and res.get(x):
                 res[x] = LiteralText(res[x])
             elif x in res:
@@ -146,8 +146,15 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
             if o in res:
                 res[n] = res[o]
                 del res[o]
-        if "warnings" in res and not res["warnings"]:
-            del res["warnings"]
+        if "warnings" in res:
+            if not res["warnings"]:
+                del res["warnings"]
+            else:
+                warnings = res['warnings']
+                del res['warnings']
+                for i, v in enumerate(warnings):
+                    warnings[i] = stringc(v, C.COLOR_WARN)
+                res[stringc("warnings", C.COLOR_WARN)] = warnings
         for banned in ["invocation", "stdout_lines", "stderr_lines",
                        "changed", "failed", "skipped", "unreachable",
                        "_ansible_delegated_vars", "_ansible_parsed",
@@ -284,9 +291,6 @@ class CallbackModule(CallbackModule_default):
             self._display.display(human_log(result._result, result._task,
                                             hostname, color, prefix=prefix,
                                             is_handler=result._task in self.__handlers))
-
-        # FIXME: incorporate these into the pseudo-YAML format.
-        self._handle_warnings(result._result)
 
     def v2_runner_on_skipped(self, result):
         if result._task.loop and 'results' in result._result:
