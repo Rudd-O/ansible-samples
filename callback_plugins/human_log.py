@@ -155,7 +155,8 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
         if unreachable:
             res = res["msg"]
         elif skipped:
-            res = res["skip_reason"]
+            if "skip_reason" in res:
+                res = res["skip_reason"]
         elif failed:
             if len(res) == 1:
                 res = res[res.keys()[0]]
