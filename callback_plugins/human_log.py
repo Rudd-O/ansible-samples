@@ -238,6 +238,7 @@ class CallbackModule(CallbackModule_default):
         prefix = u"\u2718"
         if 'exception' in result._result:
             msg = "An exception occurred during task execution. The full traceback is:\n" + result._result['exception']
+            hostname = self._hostname(result)
             self._display.display(human_log(msg, result._task,
                                             hostname, C.COLOR_ERROR, prefix=prefix))
 
