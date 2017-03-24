@@ -131,6 +131,9 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
         item = res.get("item")
         if item is not None:
             del res["item"]
+        if task.action == "service" and "status" in res:
+            if hasattr(res["status"], "keys") and len(res["status"]) > 3:
+                del res["status"]
         for x in ['stdout', 'stderr']:
             if x in res and res.get(x):
                 res[x] = LiteralText(res[x])
@@ -162,6 +165,10 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
                 res = res[res.keys()[0]]
 
     if item is not None and not isinstance(item, list):
+        # The following block transmutes with_items items into a nicer output.
+        if hasattr(item, "keys") and set(item.keys()) == set(["key", "value"]):
+            res["item_value"] = item["value"]
+            item = item["key"]
         try:
             res = collections.OrderedDict({host: {item: res}})
         except TypeError:
@@ -175,14 +182,14 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
     if ":" in banner:
         banner = banner.replace(u":", u"—")
     if is_handler:
-        type = "handler"
+        typ = "handler"
     else:
-        type = "task"
+        typ = "task"
     if task.get_path():
         path = " @ " + task.get_path()
     else:
         path = ""
-    banner = banner + stringc(" (%s%s)" % (type, path), color="bright gray")
+    banner = banner + stringc(" (%s%s)" % (typ, path), color="bright gray")
     if prefix:
         banner = prefix + " " + banner
     if isinstance(res, basestring):
