@@ -5,6 +5,8 @@
     url: '{{ jenkins.url | quote }}/reload'
     method: POST
     status_code: 302
+  register: reload_jenkins
+  changed_when: '{{ reload_jenkins.status|default(None)|string == 302|string }}'
 
 - name: restart jenkins
   shell: service jenkins restart
