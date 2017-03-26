@@ -116,6 +116,7 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
     res = copy.deepcopy(res)
     task = copy.deepcopy(task)
     item = None
+    item_label = None
 
     if hasattr(res, "get"):
         if res.get("invocation"):
@@ -128,13 +129,18 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
             res = "Censored.  The play deliberately requested no information be logged."
         elif "_ansible_no_log" in res:
             del res["_ansible_no_log"]
+
         item = res.get("item")
         if item is not None:
             del res["item"]
+        item_label = res.get("_ansible_item_label")
+        if item_label is not None:
+            del res["_ansible_item_label"]
         # The following block transmutes with_items items into a nicer output.
         if hasattr(item, "keys") and set(item.keys()) == set(["key", "value"]):
             res["item_value"] = item["value"]
             item = item["key"]
+
         if task.action == "service" and "status" in res:
             if hasattr(res["status"], "keys") and len(res["status"]) > 3:
                 del res["status"]
@@ -175,7 +181,9 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
             if len(res) == 1:
                 res = res[res.keys()[0]]
 
-    if item is not None and not isinstance(item, list):
+    if item is not None or item_label is not None:
+        if not item and item_label is not None:
+            item = item_label
         try:
             res = collections.OrderedDict({host: {item: res}})
         except TypeError:
