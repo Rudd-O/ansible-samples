@@ -131,6 +131,10 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
         item = res.get("item")
         if item is not None:
             del res["item"]
+        # The following block transmutes with_items items into a nicer output.
+        if hasattr(item, "keys") and set(item.keys()) == set(["key", "value"]):
+            res["item_value"] = item["value"]
+            item = item["key"]
         if task.action == "service" and "status" in res:
             if hasattr(res["status"], "keys") and len(res["status"]) > 3:
                 del res["status"]
@@ -172,10 +176,6 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
                 res = res[res.keys()[0]]
 
     if item is not None and not isinstance(item, list):
-        # The following block transmutes with_items items into a nicer output.
-        if hasattr(item, "keys") and set(item.keys()) == set(["key", "value"]):
-            res["item_value"] = item["value"]
-            item = item["key"]
         try:
             res = collections.OrderedDict({host: {item: res}})
         except TypeError:
