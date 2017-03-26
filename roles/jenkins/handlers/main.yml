@@ -1,7 +1,9 @@
 ---
 
 - name: reload jenkins
-  shell: curl -XPOST {{ jenkins.url | quote }}/reload
+  uri:
+    url: '{{ jenkins.url | quote }}/reload'
+    method: POST
 
 - name: restart jenkins
   shell: service jenkins restart
