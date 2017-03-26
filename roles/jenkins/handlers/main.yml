@@ -4,6 +4,7 @@
   uri:
     url: '{{ jenkins.url | quote }}/reload'
     method: POST
+    status: 302
 
 - name: restart jenkins
   shell: service jenkins restart
