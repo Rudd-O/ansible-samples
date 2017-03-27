@@ -181,6 +181,8 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
         elif failed:
             if len(res) == 1:
                 res = res[res.keys()[0]]
+        elif len(res.keys()) == 1:
+            res = res[res.keys()[0]]
 
     if item is not None or item_label is not None:
         if not item and item_label is not None:
