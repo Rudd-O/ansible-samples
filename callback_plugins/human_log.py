@@ -119,12 +119,6 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
     item_label = None
 
     if hasattr(res, "get"):
-        if res.get("invocation"):
-            if res.get("invocation").get("module_name") == "setup":
-                if res.get("ansible_facts"):
-                    for elm in ['ansible_facts']:
-                        if elm in res:
-                            del res[elm]
         if res.get("_ansible_no_log"):
             res = "Censored.  The play deliberately requested no information be logged."
         elif "_ansible_no_log" in res:
@@ -168,8 +162,7 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
         for banned in ["invocation", "stdout_lines", "stderr_lines",
                        "changed", "failed", "skipped", "unreachable",
                        "_ansible_delegated_vars", "_ansible_parsed",
-                       "_ansible_item_result", "_ansible_verbose_override",
-                       "_ansible_verbose_always"]:
+                       "_ansible_item_result", "_ansible_verbose_always"]:
             if banned in res:
                 del res[banned]
 
@@ -183,6 +176,8 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
                 res = res[res.keys()[0]]
         elif len(res.keys()) == 1:
             res = res[res.keys()[0]]
+        elif "_ansible_verbose_override" in res:
+            res = "OK"
 
     if item is not None or item_label is not None:
         if not item and item_label is not None:
