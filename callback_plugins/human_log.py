@@ -12,6 +12,7 @@ from ansible.plugins.callback.default import CallbackModule as CallbackModule_de
 from ansible.module_utils._text import to_bytes
 from ansible.utils.color import stringc
 from ansible.vars.unsafe_proxy import AnsibleUnsafeText
+from dnf.cli.output import Output
 
 
 class LiteralText(unicode): pass
@@ -112,6 +113,9 @@ def indent(text, with_):
     return text
 
 
+OUTPUT_OMITTED = "OUTPUT OMITTED"
+
+
 def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=False):
     res = copy.deepcopy(res)
     task = copy.deepcopy(task)
@@ -119,9 +123,11 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
     item_label = None
 
     if hasattr(res, "get"):
-        if res.get("_ansible_no_log"):
-            res = "Censored.  The play deliberately requested no information be logged."
-        elif "_ansible_no_log" in res:
+        if res.get("_ansible_no_log") or "_ansible_verbose_override" in res:
+            res = OUTPUT_OMITTED
+
+    if hasattr(res, "get"):
+        if "_ansible_no_log" in res:
             del res["_ansible_no_log"]
 
         item = res.get("item")
@@ -146,6 +152,7 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
         unreachable = bool(res.get("unreachable"))
         skipped = bool(res.get("skipped"))
         failed = bool(res.get("failed"))
+        changed = bool(res.get("changed"))
         for o, n in [("_ansible_notify", "notified")]:
             if o in res:
                 res[n] = res[o]
@@ -176,18 +183,22 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
                 res = res[res.keys()[0]]
         elif len(res.keys()) == 1:
             res = res[res.keys()[0]]
-        elif "_ansible_verbose_override" in res:
-            res = "OK"
 
     if item is not None or item_label is not None:
         if not item and item_label is not None:
             item = item_label
-        try:
-            res = collections.OrderedDict({host: {item: res}})
-        except TypeError:
-            res = collections.OrderedDict({host: {str(item): res}})
+        if res and res != OUTPUT_OMITTED:
+            try:
+                res = collections.OrderedDict({host: {item: res}})
+            except TypeError:
+                res = collections.OrderedDict({host: {str(item): res}})
+        else:
+            try:
+                res = collections.OrderedDict({host: item})
+            except TypeError:
+                res = collections.OrderedDict({host: str(item)})
     else:
-        if res:
+        if res and res != OUTPUT_OMITTED:
             res = collections.OrderedDict({host: res})
         else:
             res = host
@@ -272,6 +283,7 @@ class CallbackModule(CallbackModule_default):
                                             hostname, C.COLOR_ERROR, prefix=prefix))
 
     def v2_runner_on_ok(self, result):
+      try:
         delegated_vars = result._result.get('_ansible_delegated_vars', None)
         color = C.COLOR_CHANGED if result._result.get('changed', False) else C.COLOR_OK
         prefix = u"\u21BA" if result._result.get('changed', False) else u'\u2713'
@@ -297,6 +309,9 @@ class CallbackModule(CallbackModule_default):
             self._display.display(human_log(result._result, result._task,
                                             hostname, color, prefix=prefix,
                                             is_handler=result._task in self.__handlers))
+      except BaseException, e:
+          print e
+          import sys, traceback; traceback.print_tb(sys.exc_info()[-1])
 
     def v2_runner_on_skipped(self, result):
         if result._task.loop and 'results' in result._result:
