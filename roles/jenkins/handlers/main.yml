@@ -2,7 +2,7 @@
 
 - name: reload jenkins
   uri:
-    url: '{{ jenkins.url | quote }}/reload'
+    url: '{{ jenkins.url }}/reload'
     method: POST
     status_code: 302
   register: reload_jenkins
