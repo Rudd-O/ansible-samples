@@ -1,6 +1,6 @@
 # Maintain your ZFS updated
 
-This Ansible playbook installs ZFS on your Fedora system, and makes sure that
+This Ansible role installs ZFS on your Fedora system, and makes sure that
 the ZFS packages on your system are always up-to-date, down to the contents
 of the initial RAM disks that are necessary to boot from a ZFS root file
 system.  It takes care of a few steps that normal DNF update does not:
@@ -26,12 +26,29 @@ Preparation:
 
 Usage:
 
-Every time you want to update ZFS on your target system, run the playbook `zfsupdates.yml` against it.
+Every time you want to update ZFS on your target system, run this role against it.
 
-Here is a command line example you can run (perhaps from `cron`) when the working directory containing `zfsupdates.yml` is active:
+If you have another playbook that perform system updates, make sure to include this role as follows:
 
 ```
-ansible-playbook -v --connection=local zfsupdates.yml localhost
+...
+...
+
+- include_role:
+    name: zfsupdates
+  vars:
+    deployzfs_stage: one
+
+- name: task that updates your system
+  package: name=* state=latest
+
+- include_role:
+    name: zfsupdates
+  vars:
+    deployzfs_stage: one
+
+...
+...
 ```
 
 That's all!

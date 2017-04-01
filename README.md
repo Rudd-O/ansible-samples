@@ -11,7 +11,7 @@ directly into your setup.
    directory for instructions on domains, users, host names,
    SSL and DKIM.
 * [jenkins/](jenkins/) sets up a Jenkins server with a number of plugins.
-* [zfsupdates/](zfsupdates/) aids you in keeping ZFS up to date on your
+* [roles/zfsupdates/](roles/zfsupdates/) aids you in keeping ZFS up to date on your
    Fedora system which boots from ZFS.
 * [roles/updates/](roles/updates/) updates your system packages.
 * [roles/distupgrade/](roles/distupgrade/) upgrades your Fedora machine to a newer

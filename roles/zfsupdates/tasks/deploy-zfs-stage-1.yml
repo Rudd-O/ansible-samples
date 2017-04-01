@@ -1,16 +1,6 @@
 - file: name=/usr/src/zfsupdates state=absent
 
-- name: Deploy ZFS repository using generic RPM install
-  include_role:
-    name: generic-rpm-install
-  vars:
-    project: zfsupdates
-  tags:
-  - zfs
-  when: '{{ use_generic_rpm_install|default(False) and ansible_distribution in "Fedora Qubes" }}'
-
 - include: deploy-zfs-repo.yml
-  when: '{{ not use_generic_rpm_install|default(False) and ansible_distribution in "Fedora Qubes" }}'
   tags:
   - zfs
 
@@ -81,19 +71,6 @@
 - name: install build dependencies in dom0
   shell: qubes-dom0-update -y git automake rpm-build libtool libuuid-devel libblkid-devel zlib-devel make ksh
   when: "{{ ansible_distribution == 'Qubes' and 'NO' in can_build.stdout }}"
-
-- name: set ZFS packages variables
-  set_fact:
-    zfs_packages:
-    - libuutil1
-    - libzpool2
-    - libnvpair1
-    - libzfs2
-    - spl
-    - zfs
-    - spl-dkms
-    - zfs-dkms
-    - zfs-dracut
 
 - name: upgrade ZFS RPMs (Fedora)
   package: name={{ item }} state=latest

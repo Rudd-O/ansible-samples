@@ -11,10 +11,11 @@
   tags:
   - zfs
 
-- include: ../../../zfsupdates/tasks/deploy-zfs-stage-1.yml
-  when: '{{ ansible_distribution in "Fedora Qubes" and "YES" in zfstest.stdout }}'
-  tags:
-  - zfs
+- include_role:
+    name: zfsupdates
+  vars:
+    deployzfs_stage: one
+  when: '{{ "YES" in zfstest.stdout }}'
 
 - name: update yum packages for non-qubes dom0s
   package: state=latest name=* enablerepo='qubes-vm-*-security-testing'
@@ -38,10 +39,11 @@
   when: '{{ "kmod-nvidia" in "".join((do_updates_dnf.results|default([]) + do_updates_dom0.stdout_lines|default([]))) }}'
   register: redo_akmods
 
-- include: ../../../zfsupdates/tasks/deploy-zfs-stage-2.yml
-  when: '{{ ansible_distribution in "Fedora Qubes" and "YES" in zfstest.stdout }}'
-  tags:
-  - zfs
+- include_role:
+    name: zfsupdates
+  vars:
+    deployzfs_stage: two
+  when: '{{ "YES" in zfstest.stdout }}'
 
 - name: clean downloaded yum packages
   shell: test -f /usr/bin/dnf && { dnf clean packages ; } || { yum clean packages ; }
