@@ -722,8 +722,8 @@ smtp_tls_note_starttls_offer = yes
 smtp_tls_loglevel = 1
 smtp_tls_cert_file = $smtpd_tls_cert_file
 smtp_tls_key_file = $smtpd_tls_key_file
-message_size_limit = 30000000
-mailbox_size_limit = 300000000
+message_size_limit = {{ mail.message_size_limit }}
+mailbox_size_limit = {{ mail.mailbox_size_limit }}
 virtual_alias_maps = hash:/etc/postfix/virtual
 
 smtpd_milters = unix:/var/spool/opendkim/socket/opendkim.sock

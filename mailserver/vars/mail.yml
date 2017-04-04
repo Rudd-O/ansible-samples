@@ -29,6 +29,8 @@ mail:
   - mailserver.domain.com
   - domain.com
   - bond.name
+  message_size_limit: '{{ 60 * 1024 * 1024 }}'
+  mailbox_size_limit: '{{ 1024 * 1024 * 1024 }}'
 dkim:
   # You must list every domain you will be sending mail as
   # in this list.
