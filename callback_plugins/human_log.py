@@ -118,7 +118,6 @@ OUTPUT_OMITTED = "OUTPUT OMITTED"
 
 def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=False):
     res = copy.deepcopy(res)
-    task = copy.deepcopy(task)
     item = None
     item_label = None
 
