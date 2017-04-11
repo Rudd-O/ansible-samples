@@ -1,9 +1,5 @@
 - file: name=/usr/src/zfsupdates state=absent
 
-- include: deploy-zfs-repo.yml
-  tags:
-  - zfs
-
 - name: discover package manager config
   shell: if test -f /etc/dnf/dnf.conf ; then echo -n /etc/dnf/dnf.conf ; else echo -n /etc/yum.conf ; fi
   check_mode: no
