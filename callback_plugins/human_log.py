@@ -12,7 +12,6 @@ from ansible.plugins.callback.default import CallbackModule as CallbackModule_de
 from ansible.module_utils._text import to_bytes
 from ansible.utils.color import stringc
 from ansible.vars.unsafe_proxy import AnsibleUnsafeText
-from dnf.cli.output import Output
 
 
 class LiteralText(unicode): pass
