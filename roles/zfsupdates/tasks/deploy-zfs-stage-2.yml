@@ -82,6 +82,7 @@
       ret=0
       for ver in $vers ; do
         rpm -q kernel-$ver > /dev/null || rpm -q kernel-core-$ver > /dev/null || { echo No kernel $ver >&2 ; continue ; }
+        rpm -q kernel-devel-$ver > /dev/null || { echo No kernel-devel $ver >&2 ; continue ; }
         for module in spl zfs ; do
           echo Installing $module for kernel $ver >&2
           dkmsver=`ls --sort=time -d1 /usr/src/$module-* | head -1` ; dkmsver=${dkmsver#/usr/src/$module-}
