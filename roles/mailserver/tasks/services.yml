@@ -1,0 +1,27 @@
+- name: enable incron
+  service:
+    name: incrond
+    enabled: yes
+    state: '{% if create_spambox.changed or create_hambox.changed or incrontabs.changed or create_magicfolders.changed %}re{% endif %}started'
+  tags: antispam
+
+- name: enable postfix
+  service:
+    name: postfix
+    enabled: yes
+    state: '{% if postfix_config.changed or (sslconf is defined and sslconf.changed) %}re{% endif %}started'
+  tags: postfix
+
+- name: enable opendkim
+  service:
+    name: opendkim
+    enabled: yes
+    state: '{% if dkim_config.changed or dkim_privkeys.changed %}re{% endif %}started'
+  tags: dkim
+
+- name: enable dovecot
+  service:
+    name: dovecot
+    enabled: yes
+    state: '{% if dovecot_config.changed or (sslconf is defined and sslconf.changed) %}re{% endif %}started'
+  tags: dovecot

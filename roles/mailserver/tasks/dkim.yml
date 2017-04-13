@@ -1,0 +1,38 @@
+- name: install opendkim configuration files
+  template: src=templates/opendkim{{ item }} dest={{ item }} mode=0644 owner=root group=root
+  with_items:
+  - /etc/opendkim.conf
+  - /etc/opendkim/KeyTable
+  - /etc/opendkim/SigningTable
+  register: dkim_config
+- name: create socket directory for opendkim
+  file:
+    state: directory
+    owner: opendkim
+    group: mail
+    mode: 0750
+    name: /var/spool/opendkim/socket
+- name: create PKI directory for opendkim
+  file:
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+    name: /etc/pki/dkim
+- name: create PKI subdirectories for opendkim
+  file:
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+    name: /etc/pki/dkim/{{ item }}
+  with_items: '{{ dkim }}'
+- name: deploy opendkim private keys
+  copy:
+    content: '{{ dkim[item] }}'
+    dest: /etc/pki/dkim/{{ item }}/default.private
+    mode: 0640
+    owner: root
+    group: opendkim
+  with_items: '{{ dkim }}'
+  register: dkim_privkeys

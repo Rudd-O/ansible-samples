@@ -1,0 +1,49 @@
+- name: create user
+  user:
+    name: "{{ item.name }}"
+    createhome: yes
+    comment: "{{ item.gecos }}"
+    password: "{{ item.password | mandatory }}"
+  with_items: '{{ unix_users }}'
+
+- name: create legacy user inbox
+  file: dest=/var/mail/{{ item.name }} owner={{ item.name }} mode=0660 state=file
+  with_items: '{{ unix_users }}'
+
+- name: create user maildir
+  file: dest=/home/{{ item.name }}/mail owner={{ item.name }} group={{ item.name }} mode=0700 state=directory
+  with_items: '{{ unix_users }}'
+
+- name: create user inbox
+  shell: cd mail ; test -f "inbox" || { touch "inbox" && chmod 600 "inbox" && echo CREATED ; }
+  become: True
+  become_user: '{{ item.name }}'
+  register: create_inbox
+  changed_when: '{{ "CREATED" in create_inbox.stdout }}'
+  with_items: '{{ unix_users }}'
+
+- name: create user hambox
+  shell: cd mail ; test -f "Mark as ham" || { touch "Mark as ham" && chmod 600 "Mark as ham" && echo CREATED ; }
+  become: True
+  become_user: '{{ item.name }}'
+  register: create_hambox
+  changed_when: '{{ "CREATED" in create_hambox.stdout }}'
+  with_items: '{{ unix_users }}'
+
+- name: create user spambox
+  shell: cd mail ; test -f "Mark as spam" || { touch "Mark as spam" && chmod 600 "Mark as spam" && echo CREATED ; }
+  become: True
+  become_user: '{{ item.name }}'
+  register: create_spambox
+  changed_when: '{{ "CREATED" in create_spambox.stdout }}'
+  with_items: '{{ unix_users }}'
+
+- name: create symlinks to boxes
+  shell: mkdir -p .magicfolders ; cd .magicfolders ; test -h ham || { ln -s ../mail/"Mark as ham" ham && echo CREATED ; } ; test -h spam || { ln -s ../mail/"Mark as spam" spam && echo CREATED ; }
+  become: True
+  become_user: '{{ item.name }}'
+  register: create_magicfolders
+  changed_when: '{{ "CREATED" in create_magicfolders.stdout }}'
+  with_items: '{{ unix_users }}'
+  tags:
+  - spamboxes

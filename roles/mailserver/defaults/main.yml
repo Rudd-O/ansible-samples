@@ -1,0 +1,58 @@
+---
+mail:
+  message_size_limit: '{{ 60 * 1024 * 1024 }}'
+  mailbox_size_limit: '{{ 1024 * 1024 * 1024 }}'
+#   hostname: mailserver.domain.com
+#   domain: domain.com
+#   origin: domain.com
+#   destination_domains:
+#   - mailserver.domain.com
+#   - domain.com
+#   - bond.name
+
+# dkim:
+#   # You must list the private DKIM key of every domain you will be sending mail as
+#   # and receiving from in the following variables.
+#   #
+#   # For more information, see the README.md file.
+#   domain.com: '{{ lookup("file", "secrets/dkim/domain.com/default.private") }}'
+#   bond.name: '{{ lookup("file", "secrets/dkim/bond.name/default.private") }}'
+
+# ssl:
+#   # You must list the certificate and key for the mail server here.
+#   #
+#   # The certificate domain name must match the domain
+#   # name of the server in mail.hostname, which should
+#   # also be the same name below.
+#   #
+#   # For more info, check the deploy-ssl-certs role in the repository that contains this role.
+#   mailserver.domain.com:
+#     key:           '{{ lookup("file", "secrets/mailserver.domain.com.key") }}'
+#     intermediates:
+#     # The order matters.  At the bottom of the stack must be the one closest to the root of trust.
+#     - /etc/pki/tls/certs/CABUNDLE.crt
+#     certificate:   '{{ lookup("file", "secrets/mailserver_domain_com.crt") }}'
+#     assembled:     '{{ lookup("file", "secrets/assembled_mailserver.domain.com.crt") }}'
+
+# unix_users:
+#   - name: james
+#     gecos: James Bond
+#     password_unencrypted: password
+#     password: $5$h/passwordpasswordpassword/password.
+#     addresses:
+# #        - james@domain.com is tacit
+#     - aliastojames@domain.com
+#     - james@bond.name
+#   - name: john
+#     gecos: John the Ripper role account
+#         addresses:
+# #        - john@domain.com is tacit
+#     password: $9$YWpasswordpasswordpassword/password/
+# forwardings:
+#   - name: notalist@domain.com
+#     addresses:
+#     - james@domain.com
+#     - john@hotmail.com
+#   - name: shawna@goody.com
+#     addresses:
+#     - shawna@gmail.com

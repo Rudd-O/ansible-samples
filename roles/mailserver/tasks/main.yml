@@ -1,0 +1,46 @@
+- include: packages.yml
+  tags:
+  - packages
+  - dovecot
+  - postfix
+  - spf
+  - dkim
+  - antispam
+
+- include: postgrey.yml
+  tags:
+  - postgrey
+
+- include_role:
+    name: deploy-ssl-certs
+  tags: ssl
+
+- include: spf.yml
+  tags:
+  - spf
+
+- include: dkim.yml
+  tags:
+  - dkim
+
+- include: dovecot.yml
+  tags:
+  - dkim
+
+- include: postfix.yml
+  tags:
+  - postfix
+
+- include: accounts.yml
+  tags:
+  - accounts
+
+- include: antispam.yml
+  tags:
+  - antispam
+
+- include: services.yml
+
+- include: test.yml
+  tags:
+  - test

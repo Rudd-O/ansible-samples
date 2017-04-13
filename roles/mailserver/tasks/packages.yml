@@ -1,0 +1,16 @@
+- name: install required software
+  package: name={{ item }} state=present
+  with_items:
+  - postgrey
+  - postfix
+  - mailx
+  - procmail
+  - bogofilter
+  - dovecot
+  - dovecot-pigeonhole
+  - incron
+  - ca-certificates
+  - pypolicyd-spf
+  - opendkim
+- name: remove sendmail
+  package: name=sendmail state=absent

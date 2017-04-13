@@ -13,4 +13,3 @@ else
    #echo "bogofilter-dovecot-deliver: Delivering $subject to Dovecot deliver piped through Bogofilter" >> /tmp/activitylog
    echo "$text" | /usr/bin/bogofilter -p -e -u -l | /usr/libexec/dovecot/deliver
 fi
-

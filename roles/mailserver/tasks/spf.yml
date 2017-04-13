@@ -1,0 +1,17 @@
+- name: create policyd-spf group
+  group:
+    name: policyd-spf
+    system: yes
+- name: create policyd-spf user
+  user:
+    name: policyd-spf
+    createhome: yes
+    comment: "SPF policyd user"
+    system: yes
+    home: /var/lib/policyd-spf
+    group: policyd-spf
+- name: install policyd-spf configuration files
+  template: src=templates/python-policyd-spf/etc/python-policyd-spf/{{ item }} dest=/etc/python-policyd-spf/{{ item }} mode=0644 owner=root group=root
+  with_items:
+  - policyd-spf.conf
+  register: spf_config

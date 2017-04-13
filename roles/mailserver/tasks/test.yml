@@ -1,0 +1,7 @@
+- name: test the SMTP and IMAP servers work
+  shell: openssl s_client -starttls {{ item }} -connect localhost:{{ item }} -verify 5 -verify_return_error
+  changed_when: False
+  with_items:
+  - imap
+  - smtp
+  check_mode: no

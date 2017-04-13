@@ -1,0 +1,23 @@
+- name: install postfix configuration files
+  template: src=templates/postfix/etc/postfix/{{ item }} dest=/etc/postfix/{{ item }} mode=0644 owner=root group=root
+  with_items:
+  - main.cf
+  - master.cf
+  - virtual
+  register: postfix_config
+
+- name: regenerate postfix hashmaps
+  shell: postmap /etc/postfix/virtual
+  when: postfix_config.changed
+
+- name: enable catch-all for root mail
+  lineinfile:
+    state: present
+    dest: /etc/aliases
+    regexp: '^root: '
+    line: 'root: {{ unix_users[0]["name"] }}'
+  register: enable_catchall
+
+- name: regenerate aliases
+  shell: newaliases
+  when: enable_catchall.changed

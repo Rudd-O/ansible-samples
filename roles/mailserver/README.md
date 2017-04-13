@@ -1,6 +1,6 @@
 # Complete mail server with support for DKIM, SPF, spam classification and Sieve rules
 
-This Ansible recipe deploys a full SMTP server and IMAP server compliant
+This Ansible role deploys a full SMTP server and IMAP server, compliant
 with all the best practices for spam-free and good-delivery e-mail processing,
 including (but not limited to) the following features:
 
@@ -10,7 +10,13 @@ including (but not limited to) the following features:
 - Sieve rules
 - greylisting
 
-## Receiving mail: the pipeline
+Consult the *Setup* section below to configure your own mail server using this
+Ansible role.  Also consult the `defaults/main.yml` file to understand
+the variables that influence the role's behavior.
+
+## Operation
+
+### Receiving mail: the pipeline
 
 An e-mail received by your server, and meant to reach one of the accounts
 you set up, traverses through this pipeline:
@@ -39,7 +45,7 @@ you set up, traverses through this pipeline:
    e-mail to the right folder.  Should no decision be taken by these scripts,
    then the e-mail is delivered to the *INBOX* folder of your account.
 
-## Greylisting
+### Greylisting
 
 Your new mail server will reject any and all new e-mails from senders it hasn't
 seen for 60 seconds.  This is *normal*.  The sending servers will retry after a
@@ -51,9 +57,9 @@ without greylisting, you can do so by adding rules to the files
 `/etc/postfix/postgrey_whitelist_clients.local`.  See the documentation for
 *Postgrey whitelist* online to understand what to put in that file.
 
-## Spam handling
+### Spam handling
 
-### Automatic classification
+#### Automatic classification
 
 Spam classification happens upon delivery, where the command
 `bogofilter-dovecot-deliver` automatically runs unclassified mail through the
@@ -76,7 +82,7 @@ account mail headers when deciding what is spam and what isn't, so the headers
 added by the SPF and DKIM validators will inform `bogofilter` quite reliably as
 to the legitimacy of the e-mail it's receiving for classification.
 
-### Reclassification and retraining
+#### Reclassification and retraining
 
 If the classifier has made a mistake, you can reclassify e-mails as ham or as
 spam by simply using your mail client as follows:
@@ -100,3 +106,59 @@ You'll discover quite quickly that `bogofilter` learns really well what
 qualifies as spam and what does not, according to your own criteria.  It's
 almost magic.  After a few days, pretty much every e-mail will be correctly
 classified, with a false positive and false negative rate of less than 0.1%.
+
+## Setup
+
+### DKIM
+
+For each domain that your server will send mail as, you must generate a
+DKIM key pair.  Then, you must do two things:
+
+1. Deploy the public key to the DNS server that answers queries for
+   the domain.
+2. Add a variable with the corresponding private key to your Ansible
+   setup that will run this role.
+
+#### Key generation
+
+Suppose in your Ansible node you create folder `secrets/dkim`, relative
+to your playbook that includes this role.
+
+Change into that directory.  Then, for each domain, run the following script:
+
+```bash
+DOMAIN=<type your domain here>
+mkdir $DOMAIN
+opendkim-genkey -D $DOMAIN -d $DOMAIN -s default -b 2048
+```
+
+That process will create the necessary key pairs.
+Note that you will have to have the program `opendkim-genkey`
+installed on the Ansible master node, which is available
+within the opendkim package.
+
+Now you can confirm that the necessary keys are in `secrets/dkim/$DOMAIN`.
+The file `default.private` contains the private key.  The file `default.txt`
+contains the public key, in BIND record format.
+
+#### Setup of public key in DNS server
+
+For each domain, update its DNS server to include the record stored in
+`secrets/dkim/$DOMAIN/default.txt`.  If you are running BIND, it's just
+a one-line addition to the respective zone file.  The important goal is
+to publish the contents of the `private.txt` file (in each key
+subdirectory) via DNS, following the DNS portion of the guide here:
+https://support.dnsimple.com/articles/dkim-record/ .
+Failure to do so will cause other mail servers to mark your outgoing e-mails
+from these domains as not authentic (improperly signed by DKIM).
+
+#### Setup of private key in role configuration
+
+Now register the private keys as a var in your playbook or vars file:
+
+```yaml
+dkim:
+  domain1.com: '{{ lookup("file", "secrets/dkim/domain1/default.private") }}'
+  domain2.com: '{{ lookup("file", "secrets/dkim/domain1/default.private") }}'
+#...and so on and so forth...
+```

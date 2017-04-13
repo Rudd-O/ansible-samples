@@ -1,0 +1,52 @@
+- name: install dovecot configuration files
+  template: src=templates/dovecot{{ item }} dest={{ item }} mode=0644 owner=root group=root
+  with_items:
+  - /etc/dovecot/local.conf
+  register: dovecot_config
+
+- name: create dovecot sieve global directories
+  file: name={{ item }} state=directory owner=root group=root mode=0755 setype=dovecot_etc_t seuser=system_u
+  with_items:
+  - /var/lib/sieve
+  - /var/lib/sieve/before.d
+  - /var/lib/sieve/after.d
+  - /var/lib/sieve/global
+
+- name: deploy dovecot global scripts
+  copy:
+    src: files/dovecot/var/lib/sieve/{{ item }}/
+    dest: /var/lib/sieve/{{ item }}/
+    owner: root
+    group: root
+    mode: 0644
+    setype: dovecot_etc_t
+    seuser: system_u
+  with_items:
+  - before.d
+  - after.d
+  - global
+  register: sieve_global
+
+- name: compile dovecot global scripts
+  shell: |
+    set -ex
+    for item in before.d after.d global ; do
+      cd /var/lib/sieve/$item
+      for script in *.sieve ; do
+        if ! test -f "$script" ; then continue ; fi
+        sievec "$script"
+        chcon -u system_u -t dovecot_etc_t $(echo "$script" | sed 's/.sieve$/.svbin/')
+      done
+      for compiled in *.svbin ; do
+        if ! test -f "$compiled" ; then continue ; fi
+        if ! test -f $(echo "$compiled" | sed 's/.svbin$/.sieve/') ; then
+          rm -f "$compiled"
+        fi
+      done
+    done
+  when: '{{ sieve_global.changed }}'
+
+- name: install local delivery agent
+  copy: src=files/dovecot/usr/local/bin/{{ item }} dest=/usr/local/bin/{{ item }} mode=0755 owner=root group=root
+  with_items:
+  - bogofilter-dovecot-deliver
