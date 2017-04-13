@@ -109,6 +109,13 @@ moves to and from the *SPAM* folder, and then pipe the contents of the moved
 message to `learn-ham` or `learn-spam` (both programs deployed to
 `/usr/local/libexec/sieve`).
 
+All reclassification events are noted to the user's systemd journal, with tag
+`bogofilter-reclassify`.  No personal information is sent to the
+journal.  You can verify that classification is working properly by simply
+running `journalctl -fa` as the user who classifies the email, or
+as root.  The events will appear in real-time, and if there is any problem
+with the reclassifier, an error will be logged.
+
 ## Setup
 
 ### DKIM
