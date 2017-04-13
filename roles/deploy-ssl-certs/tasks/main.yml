@@ -60,9 +60,10 @@
   shell: |
     tmpfile=`mktemp`
     trap "rm -f $tmpfile" EXIT
-    cat {{ _ssl_dict[item].certificate.path|quote }} > $tmpfile
+    cat {{ _ssl_dict[item].certificate.path|quote }} > "$tmpfile"
     {% for int in _ssl_dict[item].intermediate_certificates %}
-    cat {{ int.path|quote }} >> $tmpfile
+    echo >> "$tmpfile"
+    cat {{ int.path|quote }} >> "$tmpfile"
     {% endfor %}
     if ! cmp "$tmpfile" {{ _ssl_dict[item].assembled_certificate.path|quote }}
     then
