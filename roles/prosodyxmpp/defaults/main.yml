@@ -35,5 +35,4 @@ xmpp:
 #     - /etc/pki/tls/certs/example_com.ca-bundle
 #     certificate:   /etc/pki/tls/certs/example_com.crt
 #     assembled:     /etc/pki/tls/certs/assembled_example.com.crt
-#     assembled_key: /etc/pki/tls/private/assembled_example.com.crtandkey
 ssl: {}
