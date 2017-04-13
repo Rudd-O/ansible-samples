@@ -4,11 +4,11 @@ This Ansible role deploys a full SMTP server and IMAP server, compliant
 with all the best practices for spam-free and good-delivery e-mail processing,
 including (but not limited to) the following features:
 
-- DKIM
-- SPF
-- spam classification and reclassification
-- Sieve rules
-- greylisting
+- DKIM validation of incoming mail and signing of outgoing mail.
+- SPF validation of incoming mail.
+- automatic spam classification and dead-easy reclassification: just drag mail to / from the SPAM folder to teach the system what is and isn't spam.
+- Support for Sieve rules so you can filter your mail on the server.
+- Greylisting to cut down on low-rent spammers who try to spam you only once.
 
 Consult the *Setup* section below to configure your own mail server using this
 Ansible role.  Also consult the `defaults/main.yml` file to understand
@@ -33,8 +33,7 @@ you set up, traverses through this pipeline:
      any e-mail at this stage.
 4. It is pushed through `bogofilter-dovecot-deliver`:
    * The program pipes the mail through the spam classifier (`bogofilter`),
-     but only if it has never been piped through the classifier before.
-   * Then the program pipes the mail through to the Dovecot LDA.
+   * then the program pipes the mail through to the Dovecot LDA.
 5. Dovecot LDA runs the e-mail the following Sieve scripts:
    * `/var/lib/sieve/before.d/*.sieve`, which includes the spam classifier
      ruleset that places spam into the *SPAM* folder.
@@ -103,6 +102,12 @@ You'll discover quite quickly that `bogofilter` learns really well what
 qualifies as spam and what does not, according to your own criteria.  It's
 almost magic.  After a few days, pretty much every e-mail will be correctly
 classified, with a false positive and false negative rate of less than 0.1%.
+
+**Technical note**: The reclassification is mediated by global `imapsieve`
+filters (deployed to `/var/lib/sieve/imapsieve`) that intercept message
+moves to and from the *SPAM* folder, and then pipe the contents of the moved
+message to `learn-ham` or `learn-spam` (both programs deployed to
+`/usr/local/libexec/sieve`).
 
 ## Setup
 
