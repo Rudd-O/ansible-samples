@@ -1,13 +1,9 @@
 #!/bin/bash
 
 export PATH=$HOME/bin:/usr/local/bin:$PATH
-tmp=`mktemp`
-trap "rm -f $tmp" EXIT
-cat > "$tmp"
-subject=`formail -x Subject -c < "$tmp"`
-logger -t bogofilter-reclassify "Marking $subject as {{ item }}"
-output=$(bogofilter -e {% if item == "ham" %}-Sn{% else %}-Ns{% endif %} -M < "$tmp" 2>&1)
+logger -t bogofilter-reclassify "Marking message as {{ item }}."
+output=$(bogofilter -e {% if item == "ham" %}-Sn{% else %}-Ns{% endif %} -M 2>&1)
 ret=$?
 if [ "$ret" != "0" ] ; then
-    logger -t bogofilter-reclassify "Error marking $subject as {{ item }}: $output"
+    logger -t bogofilter-reclassify "Error marking message as {{ item }}: $output"
 fi
