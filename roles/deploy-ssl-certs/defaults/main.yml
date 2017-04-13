@@ -1,0 +1,19 @@
+ssl:
+  options:
+    certificates_dir: /etc/pki/tls/certs
+    keys_dir: /etc/pki/tls/private
+#   Here is an example of how to deploy a key and a certificate:
+#   example.com:
+#     # Key is meant to hold the key in === BEGIN PRIVATE KEY === format.
+#     key:           '{{ lookup("file", "secrets/example.com.key") }}'
+#     # Certificate is meant to hold the certificate corresponding to the key
+#     # above, again in === BEGIN CERTIFICATE === format.
+#     certificate:   '{{ lookup("file", "secrets/example.com.crt") }}'
+#     # Intermediates are meant to hold intermediate certificate bundles
+#     # in === BEGIN CERTIFICATE === format.
+#     intermediates:
+#     # The order matters.  At the bottom of the stack must be the one closest to the root of trust.
+#     - '{{ lookup("file", "secrets/example.com.ca-bundle") }}'
+#     # Should you want to grant read access to a UNIX user in the system,
+#     # you can define this (optional) variable to the user in question.
+#     user_may_read: apache

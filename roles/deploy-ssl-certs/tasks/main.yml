@@ -1,0 +1,83 @@
+- script: scripts/setvars.py {{ ssl|to_json|quote }}
+  check_mode: no
+  delegate_to: localhost
+  register: _ssl_dict
+  no_log: true
+  changed_when: false
+
+- set_fact:
+    _ssl_dict: '{{ _ssl_dict.stdout|from_json }}'
+  no_log: true
+
+- name: install SSL key
+  copy:
+    content: '{{ _ssl_dict[item].key.data }}'
+    dest: '{{ _ssl_dict[item].key.path }}'
+    owner: root
+    group: root
+  with_items: '{{ _ssl_dict }}'
+  register: ssl_key_deploy
+
+- name: grant default permissions to SSL key
+  shell: chmod 0400 {{ _ssl_dict[item].key.path|quote }}
+  with_items: '{{ _ssl_dict }}'
+  when: ssl_key_deploy.changed
+
+- name: grant permission to read to the user
+  acl:
+    path: '{{ _ssl_dict[item].key.path }}'
+    entity: '{{ _ssl_dict[item].user_may_read }}'
+    etype: user
+    permissions: r
+    state: present
+  when: '{{ _ssl_dict[item].user_may_read != "" }}'
+  with_items: '{{ _ssl_dict }}'
+  register: ssl_key_acl
+
+- name: install SSL host certificate
+  copy:
+    content: '{{ _ssl_dict[item].certificate.data }}'
+    dest: '{{ _ssl_dict[item].certificate.path }}'
+    mode: 0644
+    owner: root
+    group: root
+  with_items: '{{ _ssl_dict }}'
+  register: ssl_cert_deploy
+
+- name: install SSL intermediate certificates
+  copy:
+    content: '{{ item[1].data }}'
+    dest: '{{ item[1].path }}'
+    mode: 0644
+    owner: root
+    group: root
+  with_subelements:
+  - '{{ _ssl_dict }}'
+  - intermediate_certificates
+  register: ssl_intermediate_deploy
+
+- name: assemble certificate chain
+  shell: |
+    tmpfile=`mktemp`
+    trap "rm -f $tmpfile" EXIT
+    cat {{ _ssl_dict[item].certificate.path|quote }} > $tmpfile
+    {% for int in _ssl_dict[item].intermediate_certificates %}
+    cat {{ int.path|quote }} >> $tmpfile
+    {% endfor %}
+    if ! cmp "$tmpfile" {{ _ssl_dict[item].assembled_certificate.path|quote }}
+    then
+        {% if not ansible_check_mode %}
+        cat "$tmpfile" > {{ _ssl_dict[item].assembled_certificate.path|quote }}
+        {% endif %}
+        echo CHANGED
+    fi
+  with_items: '{{ _ssl_dict }}'
+  register: ssl_cert_assemble
+  check_mode: no
+  changed_when: "'CHANGED' in ssl_cert_assemble.stdout"
+
+- name: detect if SSL configuration changed
+  set_fact:
+    sslconf:
+      changed: '{{ ssl_key_acl.changed|default(False) or ssl_key_deploy.changed or ssl_cert_deploy.changed or ssl_intermediate_deploy.changed or ssl_cert_assemble.changed}}'
+      result: '{{ _ssl_dict }}'
