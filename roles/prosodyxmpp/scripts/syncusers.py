@@ -14,10 +14,17 @@ def x():
             if existing_domain == domain and existing_user == user:
                 exists = True
         if not exists:
-            print >> sys.stderr, "CHANGED: Creating new account", user, domain
             p = subprocess.Popen(["prosodyctl", "adduser", sys.argv[1]],
-                                 stdin=subprocess.PIPE)
-            p.communicate("%s\n%s\n" % (password, password))
-            assert p.wait() == 0, "error running adduser"
+                                 stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            stdout, _ = p.communicate("%s\n%s\n" % (password, password))
+            print >> sys.stdout, stdout,
+            ret = p.wait()
+            if ret != 0:
+                if "That user already exists" in stdout:
+                    pass
+                else:
+                    assert 0, "prosodyctl ended with abnormal return code %s" % ret
+            else:
+                print "CHANGED: Created  new account %s@%s" % (user, domain)
 
 x()
