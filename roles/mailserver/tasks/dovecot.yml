@@ -2,6 +2,8 @@
   copy: src=files/dovecot/usr/local/libexec/{{ item }} dest=/usr/local/libexec/{{ item }} mode=0755 owner=root group=root
   with_items:
   - bogofilter-dovecot-deliver
+  tags:
+  - lda
 
 - name: symlink sieve plugins
   shell: |
