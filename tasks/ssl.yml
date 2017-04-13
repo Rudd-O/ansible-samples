@@ -1,0 +1,38 @@
+---
+
+- name: install SSL key
+  template: src=files/secrets/tls{{ item.value.key }} dest={{ item.value.key }} owner=root group=root
+  with_dict: '{{ ssl }}'
+  register: ssl_key_deploy
+- name: grant default permissions to SSL key
+  shell: chmod 0400 {{ item.value.key }}
+  with_dict: '{{ ssl }}'
+  when: ssl_key_deploy.changed
+- name: grant permission to read to the user
+  acl:
+    path: '{{ item.value.key }}'
+    entity: '{{ item.value.user_may_read }}'
+    etype: user
+    permissions: r
+    state: present
+  when: '{{ item.value.user_may_read is defined }}'
+  with_dict: '{{ ssl }}'
+  register: ssl_key_acl
+- name: install SSL host certificate
+  template: src=files/secrets/tls{{ item.value.certificate }} dest={{ item.value.certificate }} mode=0644 owner=root group=root
+  with_dict: '{{ ssl }}'
+  register: ssl_cert_deploy
+- name: install SSL intermediate certificates
+  template: src=files/secrets/tls{{ item[1] }} dest={{ item[1] }} mode=0644 owner=root group=root
+  with_subelements:
+  - "{{ssl}}"
+  - intermediates
+  register: ssl_intermediate_deploy
+- name: assemble certificate chain
+  shell: tmpfile=`mktemp` ; cat {{ item['value']['certificate'] }} {{ item['value']['intermediates']|join(' ') }} > $tmpfile ; if ! cmp $tmpfile {{ item['value']['assembled'] }} ; then cat $tmpfile > {{ item['value']['assembled'] }} ; echo CHANGED ; fi ; rm -f $tmpfile
+  with_dict: '{{ ssl }}'
+  register: ssl_cert_assemble
+  changed_when: "'CHANGED' in ssl_cert_assemble.stdout"
+- name: detect if SSL configuration changed
+  set_fact:
+    sslconf: '{"changed": {{ ssl_key_acl.changed|default(False) or ssl_key_deploy.changed or ssl_cert_deploy.changed or ssl_intermediate_deploy.changed or ssl_cert_assemble.changed}} }'

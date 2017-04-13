@@ -1,0 +1,56 @@
+- name: install prosody
+  package: name=prosody state=present
+  tags: package
+
+- name: install prosody modules from package
+  include_role:
+    name: generic-rpm-install
+  vars:
+    project: prosody-modules
+    package: prosody-modules
+    register_var: installprosodymodules
+  when: '{{ xmpp.modules_origin == "package" }}'
+  tags: modules
+
+- name: install prosody modules from Mercurial
+  include: modules-from-mercurial.yml
+  when: '{{ xmpp.modules_origin != "package" }}'
+  tags: modules
+
+- include: ssl.yml
+  tags: ssl
+
+- name: configure prosody
+  template:
+    src: etc/prosody/prosody.cfg.lua.j2
+    dest: /etc/prosody/prosody.cfg.lua
+    owner: root
+    group: prosody
+    mode: 0640
+  register: prosodyconfig
+  tags: config
+
+- name: enable and start prosody
+  service:
+    name: prosody
+    state: '{% if
+               modulesclone.changed|default(False)
+               or
+               linkmodules.changed|default(False)
+               or
+               prosodyconfig.changed|default(False)
+               or
+               sslconf.changed|default(False)
+               or
+               installprosodymodules.changed|default(False)
+             %}re{% endif %}started'
+    enabled: yes
+  tags: ['prosody']
+
+# FIXME: security risk — password printed on the process list.
+- name: configure users
+  script: scripts/syncusers.py '{{ item.key }}' '{{ item.value }}'
+  register: prosodyusers
+  changed_when: '{{ "CHANGED" in prosodyusers.stdout }}'
+  tags: users
+  with_dict: '{{ xmpp.jids }}'

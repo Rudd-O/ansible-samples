@@ -1,4 +1,0 @@
----
-
-- name: install mercurial
-  package: name=mercurial state=present

@@ -1,18 +1,19 @@
 # Complete XMPP server with updated support for modern XEPs — ideal for Conversations
 
-This Ansible playbook deploys a full Prosody XMPP server on your Fedora 25
+This Ansible role deploys a full Prosody XMPP server on your Fedora 25
 (or higher) server.  It also deploys a number of modules to make the operation
 of the server most compatible with [excellent features of modern chat clients
 such as Conversations](https://github.com/siacs/Conversations/blob/master/README.md#xmpp-features).
 
-See the file `vars/xmpp.yml` for more information on how to configure the playbook.
-You may have to configure your Ansible's `hash_behavior` to `merge` dictionaries.
+See the file `defaults/main.yml` for more information on how to configure the
+role from your playbook.  Note that you may have to configure your Ansible's
+`hash_behavior` to `merge` dictionaries.
 
 ## Prerequisites
 
 ### Firewall notes
 
-You will need to open TCP ports:
+You will need to open TCP ports on the machine that will act as XMPP server:
 
 * 5000
 * 5222
@@ -21,12 +22,12 @@ You will need to open TCP ports:
 
 ### SSL notes
 
-See the instructions for the mailserver recipe to understand how to configure the
-SSL certificates for your XMPP server.  The SSL certificate must be for the
-"virtual domain" of your server, not for the hostname or IP address of the actual
-machine running the service.
+See the instructions for the mailserver recipe in this repo to understand how
+to configure the SSL certificates for your XMPP server.
 
-See https://prosody.im/doc/certificates for more information.
+The SSL certificate must be for the "virtual domain" of your server, not for
+the hostname or IP of the actual machine that will run the XMPP service.
+See https://prosody.im/doc/certificates for more information on that.
 
 ### DNS notes
 
@@ -67,10 +68,12 @@ See https://prosody.im/doc/dns for more information on the matter.
 
 ## Usage
 
-Once you have met the prerequisites, configured the variables in `vars/xmpp.yml` as per your desire, and you have set up the playbook `role-prosodyxmpp.yml` to run against your intended Fedora server, simply run the playbook against it.
+Check you have met the prerequisites.
 
-Here is a command line example you can run when the working directory containing the playbook is active:
+Create a playbook that includes this role.
 
-```
-ansible-playbook -v role-prosodyxmpp.yml
-```
+In that playbook, override the default variables available in
+`defaults/main.yml` with variables of your own that make sense for
+your use case.
+
+Then simply run your new playbook against your intended Fedora server.

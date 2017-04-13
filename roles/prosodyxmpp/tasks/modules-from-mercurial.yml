@@ -1,0 +1,48 @@
+---
+
+- name: install mercurial
+  package: name=mercurial state=present
+
+- name: create prosody source modules directories
+  file:
+    name: '{{ item }}'
+    state: directory
+    mode: 0775
+    owner: root
+    group: nobody
+  with_items:
+  - /usr/src/prosody
+
+- name: clone modules directory
+  hg:
+    repo: '{{ xmpp.modules_origin.source }}'
+    clone: yes
+    dest: /usr/src/prosody/modules
+    revision: '{{ xmpp.modules_origin.revision }}'
+  become: true
+  become_user: nobody
+  register: modulesclone
+
+- name: create prosody config modules directory
+  file:
+    name: /usr/share/prosody-modules
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: symlink obtained modules
+  shell: |
+    set -e
+    for mod in $( ( cd /usr/src/prosody/modules ; ls -1d mod_* ; cd /usr/share/prosody-modules ; ls -1d mod_* ) | sort | uniq ) ; do
+      if test -d /usr/src/prosody/modules/"$mod" && test -d /usr/share/prosody-modules/"$mod" ; then continue ; fi
+      if test -d /usr/src/prosody/modules/"$mod" ; then
+        ln -s /usr/src/prosody/modules/"$mod" /usr/share/prosody-modules/"$mod"
+        echo "CHANGED: linked $mod" >&2
+      elif ! test -d /usr/src/prosody/modules/"$mod" ; then
+        rm -f /usr/share/prosody-modules/"$mod"
+        echo "CHANGED: unlinked $mod" >&2
+      fi
+    done
+  register: linkmodules
+  changed_when: '{{ "CHANGED" in linkmodules.stderr }}'

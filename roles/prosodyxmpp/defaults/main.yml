@@ -1,0 +1,39 @@
+xmpp:
+  # Use this variable to add JIDs (accounts) to your server.
+  # Note that the password set here is only the initial password.
+  # Example:
+  # jids:
+  #   user@example.com: passwordinplaintext
+  jids: {}
+  global_stanzas:
+    http_max_content_size: 104857600
+    http_upload_file_size_limit: 104857600
+  modules_origin:
+    source: https://hg.prosody.im/prosody-modules/
+    revision: 81956bb99289
+  modules:
+  # compliance with Conversations as per https://github.com/siacs/Conversations
+  - "proxy65"
+  - "smacks"
+  - "smacks_offline"
+  - "carbons"
+  - "mam"
+  - "csi"
+  - "filter_chatstates"
+  - "throttle_presence"
+  - "http_upload"
+  - "cloud_notify"
+  extra_modules: []
+# Use the following variables to set up the certificates for your server.
+# An example follows:
+# ssl:
+#   example.com:
+#     key:           /etc/pki/tls/private/example.com.key
+#     user_may_read: prosody
+#     intermediates:
+#     # The order matters.  At the bottom of the stack must be the one closest to the root of trust.
+#     - /etc/pki/tls/certs/example_com.ca-bundle
+#     certificate:   /etc/pki/tls/certs/example_com.crt
+#     assembled:     /etc/pki/tls/certs/assembled_example.com.crt
+#     assembled_key: /etc/pki/tls/private/assembled_example.com.crtandkey
+ssl: {}

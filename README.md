@@ -16,7 +16,7 @@ directly into your setup.
 * [roles/updates/](roles/updates/) updates your system packages.
 * [roles/distupgrade/](roles/distupgrade/) upgrades your Fedora machine to a newer
   release, taking appropriate recovery precautions.
-* [prosodyxmpp/](prosodyxmpp/) sets up Prosody XMPP on your Fedora
+* [roles/prosodyxmpp/](roles/prosodyxmpp/) sets up Prosody XMPP on your Fedora
   box, with up-to-date XEPS for use with modern XMPP clients.
 * [roles/qubeskde/](roles/qubeskde/) sets up KDE on any Qubes OS dom0,
   since Qubes OS decided to stop shipping KDE in the dom0.
