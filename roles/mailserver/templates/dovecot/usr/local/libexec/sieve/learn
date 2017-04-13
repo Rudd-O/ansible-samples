@@ -6,4 +6,5 @@ output=$(bogofilter -e {% if item == "ham" %}-Sn{% else %}-Ns{% endif %} -M -C 2
 ret=$?
 if [ "$ret" != "0" ] ; then
     logger -p user.error -t bogofilter "Error marking message as {{ item }}: $output"
+    exit "$ret"
 fi
