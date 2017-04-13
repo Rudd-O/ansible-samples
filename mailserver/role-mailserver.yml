@@ -28,7 +28,9 @@
     package: name=sendmail state=absent
   - name: enable postgrey
     service: name=postgrey enabled=yes state=started
-  - include: tasks/ssl.yml
+  - include_role:
+      name: deploy-ssl-certs
+    tags: ssl
   - name: install antispam mail delivery files
     template: src=files/mailserver{{ item }} dest={{ item }} mode=0755 owner=root group=root
     with_items:

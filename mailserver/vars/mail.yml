@@ -74,9 +74,9 @@ ssl:
   # `mail.hostname` variable defined in this file.  If you
   # alter it here, alter it there too.
   mailserver.domain.com:
-    key:           /etc/pki/tls/private/mailserver.domain.com.key
+    key:           '{{ lookup("file", "secrets/mailserver.domain.com.key") }}'
     intermediates:
     # The order matters.  At the bottom of the stack must be the one closest to the root of trust.
     - /etc/pki/tls/certs/CABUNDLE.crt
-    certificate:   /etc/pki/tls/certs/mailserver_domain_com.crt
-    assembled:     /etc/pki/tls/certs/assembled_mailserver.domain.com.crt
+    certificate:   '{{ lookup("file", "secrets/mailserver_domain_com.crt") }}'
+    assembled:     '{{ lookup("file", "secrets/assembled_mailserver.domain.com.crt") }}'
