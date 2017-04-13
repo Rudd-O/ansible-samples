@@ -46,7 +46,7 @@
                installprosodymodules.changed|default(False)
              %}re{% endif %}started'
     enabled: yes
-  tags: ['prosody']
+  tags: service
 
 # FIXME: security risk — password printed on the process list.
 - name: configure users
