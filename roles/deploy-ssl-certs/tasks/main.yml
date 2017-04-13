@@ -82,3 +82,4 @@
     sslconf:
       changed: '{{ ssl_key_acl.changed|default(False) or ssl_key_deploy.changed or ssl_cert_deploy.changed or ssl_intermediate_deploy.changed or ssl_cert_assemble.changed}}'
       result: '{{ _ssl_dict }}'
+  no_log: true
