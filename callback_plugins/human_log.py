@@ -181,7 +181,12 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
         elif failed:
             if len(res) == 1:
                 res = res[res.keys()[0]]
-        elif len(res.keys()) == 1 and res.keys()[0] not in ["_ansible_notify", "notified"]:
+        elif (len(res.keys()) == 1
+              and res.keys()[0] not in ["_ansible_notify", "notified"]
+              and task.action != "debug"):
+            # Simplify.  If the result contains only one key and value
+            # pair, then make the result the value instead.
+            # Subject to some exceptions, of course.
             res = res[res.keys()[0]]
 
     if item is not None or item_label is not None:
@@ -283,7 +288,6 @@ class CallbackModule(CallbackModule_default):
                                             hostname, C.COLOR_ERROR, prefix=prefix))
 
     def v2_runner_on_ok(self, result):
-      try:
         delegated_vars = result._result.get('_ansible_delegated_vars', None)
         color = C.COLOR_CHANGED if result._result.get('changed', False) else C.COLOR_OK
         prefix = u"\u21BA" if result._result.get('changed', False) else u'\u2713'
@@ -309,9 +313,6 @@ class CallbackModule(CallbackModule_default):
             self._display.display(human_log(result._result, result._task,
                                             hostname, color, prefix=prefix,
                                             is_handler=result._task in self.__handlers))
-      except BaseException, e:
-          print e
-          import sys, traceback; traceback.print_tb(sys.exc_info()[-1])
 
     def v2_runner_on_skipped(self, result):
         if result._task.loop and 'results' in result._result:
