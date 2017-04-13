@@ -10,4 +10,5 @@ ret=$?
 if [ "$ret" != "0" ] ; then
     output=`cat "$tmp2"`
     logger -p user.error -t bogofilter "Error classifying message: exited with status $ret, output: $output"
+    exit "$ret"
 fi
