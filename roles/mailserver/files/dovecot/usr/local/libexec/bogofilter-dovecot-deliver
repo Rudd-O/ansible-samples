@@ -1,4 +1,0 @@
-#!/bin/bash
-
-set -e
-/usr/bin/bogofilter -p -e -u -l | /usr/libexec/dovecot/deliver

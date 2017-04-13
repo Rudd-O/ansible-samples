@@ -1,9 +1,9 @@
 #!/bin/bash
 
-export PATH=$HOME/bin:/usr/local/bin:$PATH
-logger -p user.info -t bogofilter-reclassify "Marking message as {{ item }}."
-output=$(bogofilter -e {% if item == "ham" %}-Sn{% else %}-Ns{% endif %} -M 2>&1)
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+logger -p user.info -t bogofilter "Marking message as {{ item }}."
+output=$(bogofilter -e {% if item == "ham" %}-Sn{% else %}-Ns{% endif %} -M -C 2>&1)
 ret=$?
 if [ "$ret" != "0" ] ; then
-    logger -p user.error -t bogofilter-reclassify "Error marking message as {{ item }}: $output"
+    logger -p user.error -t bogofilter "Error marking message as {{ item }}: $output"
 fi

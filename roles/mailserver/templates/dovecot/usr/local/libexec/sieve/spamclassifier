@@ -1,0 +1,13 @@
+#!/bin/bash
+
+export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+logger -p user.info -t bogofilter "Classifying message as either spam or ham."
+tmp=`mktemp`
+tmp2=`mktemp`
+trap "rm -f $tmp $tmp2" EXIT
+bogofilter -p -e -u -l -C -I "$tmp" 2> "$tmp2"
+ret=$?
+if [ "$ret" != "0" ] ; then
+    output=`cat "$tmp2"`
+    logger -p user.error -t bogofilter "Error classifying message: exited with status $ret, output: $output"
+fi

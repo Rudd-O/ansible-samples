@@ -1,10 +1,3 @@
-- name: install local delivery agent
-  copy: src=files/dovecot/usr/local/libexec/{{ item }} dest=/usr/local/libexec/{{ item }} mode=0755 owner=root group=root
-  with_items:
-  - bogofilter-dovecot-deliver
-  tags:
-  - lda
-
 - name: symlink sieve plugins
   shell: |
     set -ex
@@ -36,6 +29,12 @@
   - /var/lib/sieve/imapsieve
   tags: sieve
 
+- name: create dovecot sieve directory for programs to be used with pipe and filter
+  file: name={{ item }} state=directory owner=root group=root mode=0755
+  with_items:
+  - /usr/local/libexec/sieve
+  tags: sieve
+
 - name: deploy dovecot global scripts
   copy:
     src: files/dovecot/var/lib/sieve/{{ item }}/
@@ -64,7 +63,7 @@
         agescript=`stat -c "%Y" "$script"`
         agecompiled=`stat -c "%Y" "$compiled" || echo 0`
         if [ "$agescript" -gt "$agecompiled" ] ; then
-            sievec -x '+vnd.dovecot.pipe +vnd.dovecot.execute' "$script"
+            sievec -x '+vnd.dovecot.pipe +vnd.dovecot.execute +vnd.dovecot.filter' "$script"
             chcon -u system_u -t dovecot_etc_t "$compiled"
             echo CHANGED recompiled "$script"
         fi
@@ -83,13 +82,13 @@
   - sieve
   - sievec
 
-- name: create dovecot sieve pipe bin dir
-  file: name={{ item }} state=directory owner=root group=root mode=0755
-  with_items:
-  - /usr/local/libexec/sieve
-  tags: sieve
+- name: install ham / spam classifier
+  template: src=templates/dovecot/usr/local/libexec/sieve/spamclassifier dest=/usr/local/libexec/sieve/spamclassifier mode=0755 owner=root group=root
+  tags:
+  - sieve
+  - classifiers
 
-- name: install ham / spam classifiers
+- name: install ham / spam reclassifiers
   template: src=templates/dovecot/usr/local/libexec/sieve/learn dest=/usr/local/libexec/sieve/learn-{{ item }} mode=0755 owner=root group=root
   with_items:
   - ham
