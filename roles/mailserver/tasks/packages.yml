@@ -4,7 +4,6 @@
   - postgrey
   - postfix
   - mailx
-  - procmail
   - bogofilter
   - dovecot
   - dovecot-pigeonhole
