@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export PATH=$HOME/bin:/usr/local/bin:$PATH
-logger p user.info -t bogofilter-reclassify "Marking message as {{ item }}."
+logger -p user.info -t bogofilter-reclassify "Marking message as {{ item }}."
 output=$(bogofilter -e {% if item == "ham" %}-Sn{% else %}-Ns{% endif %} -M 2>&1)
 ret=$?
 if [ "$ret" != "0" ] ; then
