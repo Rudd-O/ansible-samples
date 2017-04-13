@@ -10,7 +10,7 @@ directly into your setup.
    certificates that you create.  See `vars/mail.yml` inside this
    directory for instructions on domains, users, host names,
    SSL and DKIM.
-* [jenkins/](jenkins/) sets up a Jenkins server with a number of plugins.
+* [roles/jenkins/](roles/jenkins/) sets up a Jenkins server with a number of plugins.
 * [roles/zfsupdates/](roles/zfsupdates/) aids you in keeping ZFS up to date on your
    Fedora system which boots from ZFS.
 * [roles/updates/](roles/updates/) updates your system packages.
