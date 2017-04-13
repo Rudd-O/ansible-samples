@@ -7,9 +7,7 @@ directly into your setup.
 
 * [roles/mailserver/](roles/mailserver/) sets up a mail server with Dovecot, Postfix,
    the SSL certificates you provide yourself, SPF, and the DKIM
-   certificates that you create.  See `vars/mail.yml` inside this
-   directory for instructions on domains, users, host names,
-   SSL and DKIM.
+   certificates that you create.
 * [roles/jenkins/](roles/jenkins/) sets up a Jenkins server with a number of plugins.
 * [roles/zfsupdates/](roles/zfsupdates/) aids you in keeping ZFS up to date on your
    Fedora system which boots from ZFS.
