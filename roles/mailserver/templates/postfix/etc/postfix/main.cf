@@ -464,7 +464,7 @@ recipient_delimiter = +
 # ALIAS THAT FORWARDS MAIL FOR ROOT TO A REAL USER.
 #
 #mailbox_command = /some/where/procmail
-mailbox_command = /usr/local/bin/bogofilter-dovecot-deliver
+mailbox_command = /usr/local/libexec/bogofilter-dovecot-deliver
 
 # The mailbox_transport specifies the optional transport in master.cf
 # to use after processing aliases and .forward files. This parameter

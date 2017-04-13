@@ -1,8 +1,28 @@
+- name: install local delivery agent
+  copy: src=files/dovecot/usr/local/libexec/{{ item }} dest=/usr/local/libexec/{{ item }} mode=0755 owner=root group=root
+  with_items:
+  - bogofilter-dovecot-deliver
+
+- name: symlink sieve plugins
+  shell: |
+    set -ex
+    cd /usr/lib64/dovecot/sieve
+    for plugin in *.so ; do
+      test -f "../$plugin" && continue || true
+      ln -s "sieve/$plugin" ../"$plugin"
+      echo CHANGED
+    done
+  register: sieve_symlinks
+  changed_when: '{{ "CHANGED" in sieve_symlinks.stdout }}'
+  tags:
+  - dovecotplugins
+
 - name: install dovecot configuration files
   template: src=templates/dovecot{{ item }} dest={{ item }} mode=0644 owner=root group=root
   with_items:
   - /etc/dovecot/local.conf
   register: dovecot_config
+  tags: doveconf
 
 - name: create dovecot sieve global directories
   file: name={{ item }} state=directory owner=root group=root mode=0755 setype=dovecot_etc_t seuser=system_u
@@ -11,6 +31,8 @@
   - /var/lib/sieve/before.d
   - /var/lib/sieve/after.d
   - /var/lib/sieve/global
+  - /var/lib/sieve/imapsieve
+  tags: sieve
 
 - name: deploy dovecot global scripts
   copy:
@@ -25,28 +47,51 @@
   - before.d
   - after.d
   - global
+  - imapsieve
   register: sieve_global
+  tags: sieve
 
 - name: compile dovecot global scripts
   shell: |
-    set -ex
-    for item in before.d after.d global ; do
+    set -e
+    for item in before.d after.d global imapsieve ; do
       cd /var/lib/sieve/$item
       for script in *.sieve ; do
         if ! test -f "$script" ; then continue ; fi
-        sievec "$script"
-        chcon -u system_u -t dovecot_etc_t $(echo "$script" | sed 's/.sieve$/.svbin/')
+        compiled=$(echo "$script" | sed 's/.sieve$/.svbin/')
+        agescript=`stat -c "%Y" "$script"`
+        agecompiled=`stat -c "%Y" "$compiled" || echo 0`
+        if [ "$agescript" -gt "$agecompiled" ] ; then
+            sievec -x '+vnd.dovecot.pipe +vnd.dovecot.execute' "$script"
+            chcon -u system_u -t dovecot_etc_t "$compiled"
+            echo CHANGED recompiled "$script"
+        fi
       done
       for compiled in *.svbin ; do
         if ! test -f "$compiled" ; then continue ; fi
         if ! test -f $(echo "$compiled" | sed 's/.svbin$/.sieve/') ; then
           rm -f "$compiled"
+          echo CHANGED deleted "$compiled"
         fi
       done
     done
-  when: '{{ sieve_global.changed }}'
+  register: sieve_global_compile
+  changed_when: '{{ "CHANGED" in sieve_global_compile.stdout }}'
+  tags:
+  - sieve
+  - sievec
 
-- name: install local delivery agent
-  copy: src=files/dovecot/usr/local/bin/{{ item }} dest=/usr/local/bin/{{ item }} mode=0755 owner=root group=root
+- name: create dovecot sieve pipe bin dir
+  file: name={{ item }} state=directory owner=root group=root mode=0755
   with_items:
-  - bogofilter-dovecot-deliver
+  - /usr/local/libexec/sieve
+  tags: sieve
+
+- name: install ham / spam classifiers
+  copy: src=files/dovecot/usr/local/libexec/sieve/{{ item }} dest=/usr/local/libexec/sieve/{{ item }} mode=0755 owner=root group=root
+  with_items:
+  - learn-ham
+  - learn-spam
+  tags:
+  - sieve
+  - classifiers

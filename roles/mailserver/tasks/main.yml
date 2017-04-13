@@ -5,7 +5,6 @@
   - postfix
   - spf
   - dkim
-  - antispam
 
 - include: postgrey.yml
   tags:
@@ -25,7 +24,7 @@
 
 - include: dovecot.yml
   tags:
-  - dkim
+  - dovecot
 
 - include: postfix.yml
   tags:
@@ -34,10 +33,6 @@
 - include: accounts.yml
   tags:
   - accounts
-
-- include: antispam.yml
-  tags:
-  - antispam
 
 - include: services.yml
 

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+export PATH=$HOME/bin:/usr/local/bin:$PATH
+tmp=`mktemp`
+trap "rm -f $tmp" EXIT
+cat > "$tmp"
+subject=`formail -x Subject -c < "$tmp"`
+logger -t bogofilter-reclassify "Marking $subject as spam"
+output=$(bogofilter -e -Ns -M < "$tmp" 2>&1)
+ret=$?
+if [ "$ret" != "0" ] ; then
+    logger -t bogofilter-reclassify "Error marking $subject as spam: $output"
+fi

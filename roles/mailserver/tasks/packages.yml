@@ -8,7 +8,6 @@
   - bogofilter
   - dovecot
   - dovecot-pigeonhole
-  - incron
   - ca-certificates
   - pypolicyd-spf
   - opendkim

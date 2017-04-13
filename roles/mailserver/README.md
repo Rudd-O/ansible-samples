@@ -87,20 +87,17 @@ to the legitimacy of the e-mail it's receiving for classification.
 If the classifier has made a mistake, you can reclassify e-mails as ham or as
 spam by simply using your mail client as follows:
 
-Move them from the folder they are stored in, into the folder *Mark as spam*
-(for e-mail that was wrongly classified as proper e-mail) or into the folder
-*Mark as ham* (for e-mail wrongly classified as spam).
+Move them from the folder they are stored in, into the folder *SPAM*
+(for e-mail that was wrongly classified as proper e-mail) or into any other
+folder that isn't the *Trash* folder (for e-mail wrongly classified as spam).
 
-When you move mails to *Mark as spam*, the server automatically runs them
+When you move mails to *SPAM*, the server automatically runs them
 through the `bogofilter` classifier again, telling the classifer to deem those
 messages as spam.  Then, the server files the e-mail into the *SPAM* folder.
 
-When you move mails to *Mark as ham*, the server automatically runs them
+When you move mails out of *SPAM* the server automatically runs them
 through the classifier, deeming them as ham (not spam); immediately after that,
-the server runs the mail through the Sieve pipeline, which usually ends up with
-the mails being delivered to the *INBOX* folder (unless a rule in your own
-Sieve script dictates otherwise).  Then, it marks the messages as unread
-(so you can quickly spot them in their destination folder).
+the server saves the message in the destination folder.
 
 You'll discover quite quickly that `bogofilter` learns really well what
 qualifies as spam and what does not, according to your own criteria.  It's
