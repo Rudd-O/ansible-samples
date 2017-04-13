@@ -96,11 +96,11 @@ allow_registration = false;
 
 -- These are the SSL/TLS-related settings. If you don't want
 -- to use SSL/TLS, you may comment or remove this
-{% for host, data in ssl.items() %}
+{% for host, data in sslconf.result.items() %}
 {% if loop.first %}
 ssl = {
-	key = "{{ data['key'] }}";
-	certificate = "{{ data['assembled'] }}";
+	key = "{{ data.key.path }}";
+	certificate = "{{ data.assembled_certificate.path }}";
 }
 {% endif %}
 {% endfor %}
@@ -177,7 +177,7 @@ pidfile = "/run/prosody/prosody.pid";
 {{ k }} = {{ v }}
 {% endfor %}
 
-{% for host, data in ssl.items() %}
+{% for host, data in sslconf.result.items() %}
 VirtualHost "{{ host }}"
 	enabled = true -- Remove this line to enable this host
 
@@ -186,7 +186,7 @@ VirtualHost "{{ host }}"
 	-- Note that old-style SSL on port 5223 only supports one certificate, and will always
 	-- use the global one.
 	ssl = {
-		key = "{{ data['key'] }}";
-		certificate = "{{ data['assembled'] }}";
+		key = "{{ data.key.path }}";
+		certificate = "{{ data.assembled_certificate.path }}";
 	}
 {% endfor %}

@@ -17,7 +17,8 @@
   when: '{{ xmpp.modules_origin != "package" }}'
   tags: modules
 
-- include: ssl.yml
+- include_role:
+    name: deploy-ssl-certs
   tags: ssl
 
 - name: configure prosody
