@@ -5,6 +5,8 @@ Here are a few sample playbooks.  These assume that you already have an
 Ansible setup going.  You can then drop the files of the example
 directly into your setup.
 
+Roles:
+
 * [roles/mailserver/](roles/mailserver/) sets up a mail server with Dovecot, Postfix,
    the SSL certificates you provide yourself, SPF, and the DKIM
    certificates that you create.
@@ -20,6 +22,10 @@ directly into your setup.
   since Qubes OS decided to stop shipping KDE in the dom0.
 * [roles/install-package](roles/install-package/) deploys a package
   whether to a dom0 or a regular machine.
+
+Modules:
+* [library/gconf.py](library/gconf.py) changes GConf settings on GNOME desktops,
+  both user settings and system-wide defaults.
 
 See `README.md` files inside each directory, when they exist.
 
