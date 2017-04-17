@@ -279,13 +279,12 @@ class CallbackModule(CallbackModule_default):
                                             hostname, C.COLOR_ERROR, prefix=prefix))
 
         if result._task.loop and 'results' in result._result:
-            self._process_items(result)
-        else:
-            hostname = self._hostname(result)
-            if ignore_errors:
-                prefix = u"\u2718 (ignored)"
-            self._display.display(human_log(result._result, result._task,
-                                            hostname, C.COLOR_ERROR, prefix=prefix))
+            result = self._process_items(result)
+        hostname = self._hostname(result)
+        if ignore_errors:
+            prefix = u"\u2718 (ignored)"
+        self._display.display(human_log(result._result, result._task,
+                                        hostname, C.COLOR_ERROR, prefix=prefix))
 
     def v2_runner_on_ok(self, result):
         delegated_vars = result._result.get('_ansible_delegated_vars', None)
@@ -307,21 +306,19 @@ class CallbackModule(CallbackModule_default):
                     del result._result['diff']
 
         if result._task.loop and 'results' in result._result:
-            self._process_items(result)
-        else:
-            hostname = self._hostname(result)
-            self._display.display(human_log(result._result, result._task,
-                                            hostname, color, prefix=prefix,
-                                            is_handler=result._task in self.__handlers))
+            result = self._process_items(result)
+        hostname = self._hostname(result)
+        self._display.display(human_log(result._result, result._task,
+                                        hostname, color, prefix=prefix,
+                                        is_handler=result._task in self.__handlers))
 
     def v2_runner_on_skipped(self, result):
         if result._task.loop and 'results' in result._result:
-            self._process_items(result)
-        else:
-            prefix = u"\u23E9"
-            hostname = self._hostname(result)
-            self._display.display(human_log(result._result, result._task,
-                                            hostname, color=C.COLOR_SKIP, prefix=prefix))
+            result = self._process_items(result)
+        prefix = u"\u23E9"
+        hostname = self._hostname(result)
+        self._display.display(human_log(result._result, result._task,
+                                        hostname, color=C.COLOR_SKIP, prefix=prefix))
 
     def v2_runner_on_unreachable(self, result):
         prefix = u"\U0001F6C7"
