@@ -253,9 +253,6 @@ class CallbackModule(CallbackModule_default):
         CallbackModule_default.__init__(self, *args, **kwargs)
         self.__handlers = {}
 
-    def _process_items(self, result):
-        pass
-
     def v2_on_file_diff(self, result):
         return
 
@@ -279,7 +276,9 @@ class CallbackModule(CallbackModule_default):
                                             hostname, C.COLOR_ERROR, prefix=prefix))
 
         if result._task.loop and 'results' in result._result:
-            result = self._process_items(result)
+            # This is not a call to v2_runner_item_on_...
+            # so we ignore it.
+            return
         hostname = self._hostname(result)
         if ignore_errors:
             prefix = u"\u2718 (ignored)"
@@ -306,7 +305,9 @@ class CallbackModule(CallbackModule_default):
                     del result._result['diff']
 
         if result._task.loop and 'results' in result._result:
-            result = self._process_items(result)
+            # This is not a call to v2_runner_item_on_...
+            # so we ignore it.
+            return
         hostname = self._hostname(result)
         self._display.display(human_log(result._result, result._task,
                                         hostname, color, prefix=prefix,
@@ -314,7 +315,9 @@ class CallbackModule(CallbackModule_default):
 
     def v2_runner_on_skipped(self, result):
         if result._task.loop and 'results' in result._result:
-            result = self._process_items(result)
+            # This is not a call to v2_runner_item_on_...
+            # so we ignore it.
+            return
         prefix = u"\u23E9"
         hostname = self._hostname(result)
         self._display.display(human_log(result._result, result._task,
