@@ -26,6 +26,9 @@ Roles:
 Modules:
 * [library/gconf.py](library/gconf.py) changes GConf settings on GNOME desktops,
   both user settings and system-wide defaults.
+* [library/kernel_module.py](library/kernel_module.py) loads kernel modules and
+  ensures they are loaded after a reboot.  It uses `/etc/modules-load.d` for the
+  purpose.
 
 See `README.md` files inside each directory, when they exist.
 
