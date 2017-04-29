@@ -30,7 +30,33 @@ EXAMPLES = r"""
     state: loaded
 """
 
+
+NOTHING_TO_DO = "Nothing to do"
+
+
 def loaded(module, name):
+    changed = False
+    msg = NOTHING_TO_DO
+
+    present = False
+    with open('/proc/modules') as modules:
+        module_name = name.replace('-', '_') + ' '
+        for line in modules:
+            if line.startswith(module_name):
+                present = True
+                break
+    if not present:
+        if not module.check_mode:
+            p = subprocess.Popen(["modprobe", "--", name],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
+            out = p.communicate()[0].strip()
+            ret = p.wait()
+            if ret != 0:
+                return module.fail_json(rc=ret, msg=out)
+        changed = True
+        msg = "Module %s loaded" % name
+
     sanitized = re.sub(r'\W+', '', name)
     sanitized = "/etc/modules-load.d/%s.conf" % sanitized
     try:
@@ -41,23 +67,18 @@ def loaded(module, name):
         if e.errno != errno.ENOENT:
             raise
         text = ""
-    changed = False
-    msg = "Nothing to do"
     if text != name:
         if not module.check_mode:
-            p = subprocess.Popen(["modprobe", "--", name],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT)
-            out = p.communicate()[0].strip()
-            ret = p.wait()
-            if ret != 0:
-                return module.fail_json(rc=ret, msg=out)
             f = file(sanitized, "wb")
             f.write(name)
             f.close()
             os.chmod(sanitized, 0644)
         changed = True
-        msg = "%s created" % sanitized
+        if msg != NOTHING_TO_DO:
+            msg = msg + ", %s created" % sanitized
+        else:
+            msg = "%s created" % sanitized
+
     module.exit_json(changed=changed, msg=msg)
 
 
