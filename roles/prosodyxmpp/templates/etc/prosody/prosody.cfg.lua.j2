@@ -174,7 +174,7 @@ pidfile = "/run/prosody/prosody.pid";
 -- Include "conf.d/*.cfg.lua"
 
 {% for k, v in xmpp.global_stanzas.items() %}
-{{ k }} = {{ v }};
+{{ k }} = {{ v }}
 {% endfor %}
 
 {% for host, data in sslconf.result.items() %}

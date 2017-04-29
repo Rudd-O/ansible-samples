@@ -168,6 +168,6 @@ Now register the private keys as a var in your playbook or vars file:
 ```yaml
 dkim:
   domain1.com: '{{ lookup("file", "secrets/dkim/domain1/default.private") }}'
-  domain2.com: '{{ lookup("file", "secrets/dkim/domain1/default.private") }}'
+  domain2.com: '{{ lookup("file", "secrets/dkim/domain2/default.private") }}'
 #...and so on and so forth...
 ```
