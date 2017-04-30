@@ -1,2 +1,6 @@
 # policy_file: path/to/policyfile/file.te
+# # or
+# policy_files:
+# - path/to/policy/file1.te
+# - path/to/policy/file2.te
 # state: enabled

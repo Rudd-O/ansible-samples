@@ -10,7 +10,8 @@
 
 - name: disable modules from policy group
   shell: |
-    modname=$( {{ policy_file|basename|quote }} | sed 's/.te$//' )
+    {% for pfile in policy_files|default([policy_file]) %}
+    modname=$( {{ pfile|basename|quote }} | sed 's/.te$//' )
     if semodule -l | grep -qFx "$modname" ; then
       {% if not ansible_check_mode %}
       semodule -r "$modname"
@@ -20,6 +21,7 @@
       {% endif %}
       echo DISABLED
     fi
+    {% endfor %}
   when: state|default("enabled") == "disabled"
   register: disablemod
   changed_when: '{{ "DISABLED" in disablemod.stdout }}'
@@ -36,34 +38,35 @@
 
 - name: copy policies
   copy:
-    src: '{{ policy_file }}'
-    dest: /etc/selinux/targeted/local/
+    src: '{{ item }}'
+    dest: '/etc/selinux/targeted/local/{{ item|basename }}'
     mode: 0644
     owner: root
     group: root
   register: copy_policy_modules
+  with_items: '{{ policy_files|default([policy_file]) }}'
   when: state|default("enabled") != "disabled"
 
 - name: compile policies
   shell: |
     cd /etc/selinux/targeted/local/
-    for a in {{ policy_file|basename|quote }}
-    do
-        mod=$(echo $a | sed 's/\.te/.mod/')
-        pp=$(echo $a | sed 's/\.te/.pp/')
-        checkmodule -M -m -o "$mod" "$a" && semodule_package -o "$pp" -m "$mod" || {
-            rm -f "$pp" "$mod" "$a"
-            exit 4
-        }
-    done
+    {% for pfile in policy_files|default([policy_file]) %}
+    a={{ pfile|basename|quote }}
+    mod=$(echo $a | sed 's/\.te/.mod/')
+    pp=$(echo $a | sed 's/\.te/.pp/')
+    checkmodule -M -m -o "$mod" "$a" && semodule_package -o "$pp" -m "$mod" || {
+        rm -f "$pp" "$mod" "$a"
+        exit 4
+    }
+    {% endfor %}
   register: compile_policy_modules
   when: copy_policy_modules.changed and state|default("enabled") != "disabled"
 
 - name: load policies
   shell: |
-    for a in {{ policy_file|basename|quote }}
-    do
-        pp=$(echo $a | sed 's/\.te/.pp/')
-        semodule -i /etc/selinux/targeted/local/"$pp"
-    done
+    {% for pfile in policy_files|default([policy_file]) %}
+    a={{ pfile|basename|quote }}
+    pp=$(echo $a | sed 's/\.te/.pp/')
+    semodule -i /etc/selinux/targeted/local/"$pp" || { exit 8 ; }
+    {% endfor %}
   when: compile_policy_modules.changed and state|default("enabled") != "disabled"

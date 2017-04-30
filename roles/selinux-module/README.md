@@ -8,9 +8,16 @@ to `disabled`, the specific module will be disabled.
 
 - `policy_file`: path to a local policy file (`.te`) that will be
   deployed to the server.  Files get deployed to
-  `/etc/selinux/targeted/local`.
+  `/etc/selinux/targeted/local`.  Alternatively, to do multiple
+  files at once, use variable:
+- `policy_files`: a list of paths to local policy files.  Mutually
+  exclusive with `policy_file`.
 - `state`: either `enabled` or `disabled` for the respective
   action w.r.t. the module.
+
+The name of the module in the target system will be the same
+name of the file (specifically, its basename), without the
+`.te` extension.
 
 ## Generating and using a module
 
