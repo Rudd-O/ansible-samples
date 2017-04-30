@@ -1,34 +1,69 @@
 ---
 
 - name: ensure the proper packages are available
-  package: name={{ item }} state=present
+  package:
+    name: '{{ item }}'
+    state: present
   with_items:
   - policycoreutils
   - policycoreutils-python-utils 
+
 - name: disable modules from policy group
   shell: |
     modname=$( {{ policy_file|basename|quote }} | sed 's/.te$//' )
     if semodule -l | grep -qFx "$modname" ; then
+      {% if not ansible_check_mode %}
       semodule -r "$modname"
       rm -f /etc/selinux/targeted/local/"$modname".pp
       rm -f /etc/selinux/targeted/local/"$modname".mod
       rm -f /etc/selinux/targeted/local/"$modname".te
+      {% endif %}
       echo DISABLED
     fi
   when: state|default("enabled") == "disabled"
   register: disablemod
   changed_when: '{{ "DISABLED" in disablemod.stdout }}'
+  check_mode: no
+
 - name: create local policy directory
-  file: state=directory dest=/etc/selinux/targeted/local mode=0755 owner=root group=root
+  file:
+    state: directory
+    dest: /etc/selinux/targeted/local
+    mode: 0755
+    owner: root
+    group: root
   when: state|default("enabled") != "disabled"
+
 - name: copy policies
-  copy: src={{ policy_file }} dest=/etc/selinux/targeted/local/ mode=0644 owner=root group=root
+  copy:
+    src: '{{ policy_file }}'
+    dest: /etc/selinux/targeted/local/
+    mode: 0644
+    owner: root
+    group: root
   register: copy_policy_modules
   when: state|default("enabled") != "disabled"
+
 - name: compile policies
-  shell: cd /etc/selinux/targeted/local/ ; for a in {{ policy_file|basename|quote }} ; do checkmodule -M -m -o $(echo $a | sed 's/\.te/.mod/') $a && semodule_package -o $(echo $a | sed 's/\.te/.pp/') -m $(echo $a | sed 's/\.te/.mod/') || { rm -f *.pp *.mod ; exit 4 ; } ; done
+  shell: |
+    cd /etc/selinux/targeted/local/
+    for a in {{ policy_file|basename|quote }}
+    do
+        mod=$(echo $a | sed 's/\.te/.mod/')
+        pp=$(echo $a | sed 's/\.te/.pp/')
+        checkmodule -M -m -o "$mod" "$a" && semodule_package -o "$pp" -m "$mod" || {
+            rm -f "$pp" "$mod" "$a"
+            exit 4
+        }
+    done
   register: compile_policy_modules
   when: copy_policy_modules.changed and state|default("enabled") != "disabled"
+
 - name: load policies
-  shell: semodule -i /etc/selinux/targeted/local/$( echo {{ policy_file|basename|quote }} | sed 's/\.te/.pp/' )
+  shell: |
+    for a in {{ policy_file|basename|quote }}
+    do
+        pp=$(echo $a | sed 's/\.te/.pp/')
+        semodule -i /etc/selinux/targeted/local/"$pp"
+    done
   when: compile_policy_modules.changed and state|default("enabled") != "disabled"
