@@ -28,3 +28,10 @@ Then, install it with your playbook a follows (example):
         state: enabled
       tags:
       - selinux
+
+## Caution
+
+Ensure, prior to deploying a SELinux policy module, that another
+module with the same name is not already loaded in the target
+system.  You can find out which modules are loaded by using the
+command `semodule -l` on the target system.
