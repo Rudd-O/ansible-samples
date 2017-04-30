@@ -22,6 +22,8 @@ Roles:
   since Qubes OS decided to stop shipping KDE in the dom0.
 * [roles/install-package](roles/install-package/) deploys a package
   whether to a dom0 or a regular machine.
+* [roles/selinux-module](roles/selinux-module/) deploys a SELinux module type
+  enforcement file (`.te`) and activates it.
 
 Modules:
 * [library/gconf.py](library/gconf.py) changes GConf settings on GNOME desktops,

@@ -1,0 +1,2 @@
+# policy_file: path/to/policyfile/file.te
+# state: enabled
