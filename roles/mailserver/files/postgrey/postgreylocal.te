@@ -1,0 +1,9 @@
+module postgreylocal 1.2;
+
+require {
+	type postgrey_t;
+	type bin_t;
+	class file execute;
+}
+
+allow postgrey_t bin_t:file execute;

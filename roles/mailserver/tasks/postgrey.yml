@@ -1,2 +1,12 @@
+- name: enable postgrey local SELinux module
+  include_role:
+    name: selinux-module
+  vars:
+    policy_file: files/postgrey/postgreylocal.te
+    state: enabled
+  tags:
+  - selinux
+
 - name: enable postgrey
   service: name=postgrey enabled=yes state=started
+
