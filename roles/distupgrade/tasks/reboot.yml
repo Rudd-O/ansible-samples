@@ -11,14 +11,15 @@
 - name: locally notify about reboot
   local_action: shell zenity --notification --text "Machine "{{ inventory_hostname|quote }}" is shutting down.  Ensure it decrypts if it is encrypted." || true
 
-- name: power off VM via dom0
-  shell: qvm-shutdown --wait {{ inventory_hostname|quote }}
-  delegate_to: '{{ (qubes|default({})).dom0_vm|default(qubes_dom0_vm) }}'
-  become: False
-  register: shutdownviadom0
-  failed_when: 'shutdownviadom0.rc|default(None) != 0 and "ERROR: VM already stopped" not in shutdownviadom0.stderr'
+- block:
+  - name: power off VM via dom0
+    shell: qvm-shutdown --wait {{ inventory_hostname|quote }}
+    delegate_to: '{{ (qubes|default({})).dom0_vm|default(qubes_dom0_vm) }}'
+    become: False
+    register: shutdownviadom0
+    failed_when: 'shutdownviadom0.rc|default(None) != 0 and "ERROR: VM already stopped" not in shutdownviadom0.stderr'
+  - meta: clear_host_errors
   when: ansible_connection|default("") == "qubes"
-- meta: clear_host_errors
 
 - block:
   - name: wait for server to come back after reboot
