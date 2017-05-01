@@ -1,17 +1,17 @@
 - include: testboot.yml
 
 - include: variables.yml
-  when: '{{ ansible_distribution in "Fedora Qubes" }}'
+  when: ansible_distribution in "Fedora Qubes"
   tags:
   - after
 
 - include: prepare.yml
-  when: '{{ ansible_distribution in "Fedora Qubes" }}'
+  when: ansible_distribution in "Fedora Qubes"
 
 - include: upgrade.yml
-  when: '{{ ansible_distribution in "Fedora Qubes" and targetdistrover|int != ansible_distribution_version|int }}'
+  when: ansible_distribution in "Fedora Qubes" and targetdistrover|int != ansible_distribution_version|int
 
 - include: cleanup.yml
-  when: '{{ ansible_distribution in "Fedora Qubes" }}'
+  when: ansible_distribution in "Fedora Qubes"
   tags:
   - after

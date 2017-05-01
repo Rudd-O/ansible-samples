@@ -78,7 +78,7 @@
 
 - name: upgrade ZFS RPMs (Qubes)
   shell: rpm -q {{ " ".join(zfs_packages) }} || qubes-dom0-update -y {{ " ".join(zfs_packages) }}
-  when: '{{ ansible_distribution == "Qubes" }}'
+  when: ansible_distribution == "Qubes"
   register: upgrade_zfs_dom0
   changed_when: '{{ upgrade_zfs_dom0.stdout.find("Nothing to do.") == -1 }}'
 
@@ -128,6 +128,6 @@
 
 - name: touch marker file after executed upgrade
   shell: touch /.zfsreinstallneeded
-  when: '{{ upgrade_zfs }}'
+  when: upgrade_zfs
   tags:
   - zfs

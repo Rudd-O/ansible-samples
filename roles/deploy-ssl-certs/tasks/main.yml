@@ -30,7 +30,7 @@
     etype: user
     permissions: r
     state: present
-  when: '{{ _ssl_dict[item].user_may_read != "" }}'
+  when: _ssl_dict[item].user_may_read != ""
   with_items: '{{ _ssl_dict }}'
   register: ssl_key_acl
 

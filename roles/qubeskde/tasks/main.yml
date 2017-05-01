@@ -1,6 +1,6 @@
 - include_role:
     name: install-packages
-  when: '{{ ansible_distribution == "Qubes" }}'
+  when: ansible_distribution == "Qubes"
 - name: fix PAM settings for kscreensaver so the screen can be unlocked
   shell: |
       cd /etc/pam.d
@@ -17,10 +17,10 @@
   become: true
   register: kscreensaverfix
   changed_when: '{{ "ALREADY" not in kscreensaverfix.stdout }}'
-  when: '{{ ansible_distribution == "Qubes" }}'
+  when: ansible_distribution == "Qubes"
 - name: fix color palette
   shell: test -d "$HOME"/.local/share/qubes-kde || { echo YES ; /usr/bin/qubes-generate-color-palette ; }
   become: false
   register: dom0palette
   changed_when: '{{ "YES" in dom0palette.stdout }}'
-  when: '{{ ansible_distribution == "Qubes" }}'
+  when: ansible_distribution == "Qubes"

@@ -1,14 +1,14 @@
 - block:
 
   - include: tasks/deploy-zfs-repo.yml
-    when: '{{ deployzfs_stage|default("one") == "one" }}'
+    when: deployzfs_stage|default("one") == "one"
 
   - include: tasks/deploy-zfs-stage-1.yml
-    when: '{{ deployzfs_stage|default("one") == "one"  }}'
+    when: deployzfs_stage|default("one") == "one"
 
   - include: tasks/deploy-zfs-stage-2.yml
-    when: '{{ deployzfs_stage|default("two") == "two"  }}'
+    when: deployzfs_stage|default("two") == "two"
 
-  when: '{{ ansible_distribution in "Fedora Qubes" }}'
+  when: ansible_distribution in "Fedora Qubes"
   tags:
   - zfs

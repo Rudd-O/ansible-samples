@@ -3,11 +3,11 @@
     shell: dnf --releasever {{ targetdistrover|int }} update -y {{ base_packages }}
   - name: execute upgrade in dnf-upgrade mode
     shell: dnf upgrade -y --releasever {{ targetdistrover|int }}
-  when: '{{ method|default(None) == "dnf-upgrade" }}'
+  when: method|default(None) == "dnf-upgrade"
 
 - name: execute upgrade in distro-sync mode
   shell: dnf distro-sync -y --releasever {{ targetdistrover|int }}
-  when: '{{ method|default(None) in "distro-sync" }}'
+  when: method|default(None) in "distro-sync"
 
 - block:
   - name: update initial packages in qubes-dom0-update mode
@@ -16,7 +16,7 @@
     changed_when: '{{ "Nothing to do" not in qubes_dom0_base_package_upgrade.stdout }}'
   - name: execute upgrade in qubes-dom0-update mode
     shell: qubes-dom0-update -y --releasever {{ targetdistrover|int }}
-  when: '{{ method|default(None) == "qubes-dom0-update" }}'
+  when: method|default(None) == "qubes-dom0-update"
 
 - block:
   - name: install system upgrade plugin
@@ -27,4 +27,4 @@
     vars:
       reboot_command: dnf system-upgrade reboot
       timeout: 7200
-  when: '{{ method|default(None) in "system-upgrade" }}'
+  when: method|default(None) in "system-upgrade"

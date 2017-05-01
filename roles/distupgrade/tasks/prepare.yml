@@ -11,4 +11,4 @@
 
 - name: enable debug shell
   service: name=debug-shell state=started enabled=yes
-  when: '{{ debug_shell }}'
+  when: debug_shell

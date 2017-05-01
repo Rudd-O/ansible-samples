@@ -9,12 +9,12 @@
     project: prosody-modules
     package: prosody-modules
     register_var: installprosodymodules
-  when: '{{ xmpp.modules_origin == "package" }}'
+  when: xmpp.modules_origin == "package"
   tags: modules
 
 - name: install prosody modules from Mercurial
   include: modules-from-mercurial.yml
-  when: '{{ xmpp.modules_origin != "package" }}'
+  when: xmpp.modules_origin != "package"
   tags: modules
 
 - include_role:

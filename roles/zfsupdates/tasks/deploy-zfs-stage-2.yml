@@ -69,7 +69,7 @@
         done
       done
   register: uninstall_old_spl_zfs
-  when: '{{ mustrecompile.changed }}'
+  when: mustrecompile.changed
   changed_when: "{{ 'YES' in uninstall_old_spl_zfs.stdout }}"
   tags:
   - zfs
@@ -92,14 +92,14 @@
         done
       done
   register: install_spl_zfs
-  when: '{{ mustrecompile.changed }}'
+  when: mustrecompile.changed
   changed_when: "{{ 'YES' in install_spl_zfs.stdout }}"
   tags:
   - zfs
   - dkms
 
 - include: redo-initramfs.yml
-  when: '{{ mustrecompile.changed or upgrade_zfs }}'
+  when: mustrecompile.changed or upgrade_zfs
   tags:
   - dkms
 
