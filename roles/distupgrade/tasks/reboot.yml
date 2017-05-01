@@ -18,6 +18,7 @@
     become: False
     register: shutdownviadom0
     failed_when: 'shutdownviadom0.rc|default(None) != 0 and "ERROR: VM already stopped" not in shutdownviadom0.stderr'
+    when: '(qubes|default({})).dom0_vm|default(qubes_dom0_vm|default(""))'
   - meta: clear_host_errors
   when: ansible_connection|default("") == "qubes"
 
