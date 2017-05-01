@@ -16,7 +16,7 @@
     section: main
     option: installonlypkgs
     value: kernel, kernel-modules, kernel-core, kernel-devel
-  when: "{{ ansible_distribution != 'Qubes' }}"
+  when: "ansible_distribution != 'Qubes'"
   tags:
   - zfs
   - yum
@@ -30,7 +30,7 @@
     fi
   register: insertmarker
   changed_when: "{{ 'CHANGED' in insertmarker.stdout }}"
-  when: "{{ ansible_distribution == 'Qubes' }}"
+  when: "ansible_distribution == 'Qubes'"
   tags:
   - zfs
   - yum
@@ -41,7 +41,7 @@
     dest: "{{ pkgconffile.stdout }}"
     marker: "### ANSIBLE {mark} ###"
     content: "installonlypkgs=kernel, kernel-modules, kernel-core, kernel-devel, kernel-qubes-vm"
-  when: "{{ ansible_distribution == 'Qubes' }}"
+  when: "ansible_distribution == 'Qubes'"
   tags:
   - zfs
   - yum
@@ -60,18 +60,18 @@
     - make
     - ksh
   register: can_build
-  when: "{{ ansible_distribution == 'Qubes' }}"
+  when: "ansible_distribution == 'Qubes'"
   changed_when: False
   check_mode: no
 
 - name: install build dependencies in dom0
   shell: qubes-dom0-update -y git automake rpm-build libtool libuuid-devel libblkid-devel zlib-devel make ksh
-  when: "{{ ansible_distribution == 'Qubes' and 'NO' in can_build.stdout }}"
+  when: "ansible_distribution == 'Qubes' and 'NO' in can_build.stdout"
 
 - name: upgrade ZFS RPMs (Fedora)
   package: name={{ item }} state=latest
   with_items: '{{ zfs_packages }}'
-  when: "{{ ansible_distribution != 'Qubes' }}"
+  when: "ansible_distribution != 'Qubes'"
   register: upgrade_zfs_nondom0
   tags:
   - zfs

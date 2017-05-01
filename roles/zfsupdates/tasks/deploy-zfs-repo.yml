@@ -5,13 +5,13 @@
     changed_when: False
 
   - copy: src=files/zfs.repo dest=/etc/yum.repos.d/zfs.repo mode=0644 owner=root group=root
-    when: "is not installed" in zfsreleasepkg.stdout
+    when: '"is not installed" in zfsreleasepkg.stdout'
 
   - copy: src=files/RPM-GPG-KEY-zfsonlinux dest=/etc/pki/rpm-gpg/RPM-GPG-KEY-zfsonlinux mode=0644 owner=root group=root
-    when: "is not installed" in zfsreleasepkg.stdout
+    when: '"is not installed" in zfsreleasepkg.stdout'
 
   - package: name=zfs-release state=latest
-    when: "is not installed" in zfsreleasepkg.stdout
+    when: '"is not installed" in zfsreleasepkg.stdout'
   when: not use_generic_rpm_install
 
 - block:
