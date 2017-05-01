@@ -98,7 +98,7 @@
   - zfs
   - dkms
 
-- include: redo-initramfs.yml
+- include: ../../../tasks/redo-initramfs.yml
   when: mustrecompile.changed or upgrade_zfs
   tags:
   - dkms

@@ -19,10 +19,10 @@
               continue
           fi
           if [ ! -f "$initramfs".knowngood ] ; then
-              cp -f "$initramfs" "$initramfs".knowngood && echo CHANGED
+              cp -f "$initramfs" "$initramfs".knowngood && echo CHANGED backup made of "$initramfs"
           fi
       done
-      dracut -fv --regenerate-all && echo CHANGED
+      dracut -f --regenerate-all && echo CHANGED regenerated all initial RAM disks
   register: regenramfs
   when: ansible_distribution in "Fedora Qubes"
   changed_when: "{{ 'CHANGED' in regenramfs.stdout }}"
