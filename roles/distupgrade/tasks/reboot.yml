@@ -3,15 +3,24 @@
   when: ansible_connection != "ssh" and ansible_connection != "qubes" and ansible_connection != "smart"
 
 - name: run reboot command
-  shell: sleep 2 && {{ reboot_command|default("reboot") }}
+  shell: sleep 2 && '{{ reboot_command|default("reboot") }}'
+  ignore_errors: true
   async: 1
   poll: 0
-  ignore_errors: true
+
+- name: locally notify about reboot
+  local_action: shell zenity --notification --text "Machine "{{ inventory_hostname|quote }}" is shutting down.  Ensure it decrypts if it is encrypted." || true
+
+- name: power off VM via dom0
+  shell: qvm-shutdown --wait {{ inventory_hostname|quote }}
+  delegate_to: '{{ (qubes|default({})).dom0_vm|default(qubes_dom0_vm) }}'
+  become: False
+  register: shutdownviadom0
+  failed_when: 'shutdownviadom0.rc|default(None) != 0 and "ERROR: VM already stopped" not in shutdownviadom0.stderr'
+  when: ansible_connection|default("") == "qubes"
+- meta: clear_host_errors
 
 - block:
-  - name: locally notify about reboot
-    local_action: shell zenity --notification --text "Machine {{ inventory_hostname }} rebooted.  Ensure it decrypts if it is encrypted." || true
-
   - name: wait for server to come back after reboot
     local_action: wait_for port=22 delay=15 timeout={{ timeout|default(600) }} search_regex=OpenSSH host={{ ansible_ssh_host|default(inventory_hostname) }} state=started
     when: ansible_connection != "qubes"
