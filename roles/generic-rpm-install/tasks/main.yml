@@ -51,12 +51,12 @@
     content: |
         [{{ project }}]
         name={{ project }} for $releasever - $basearch
-        baseurl=file://{{ generic_rpm_install.package_cache_root }}/{{ project }}/{% if inventory_hostname in groups["qubes-dom0s"] %}q{% else %}fc{% endif %}$releasever
+        baseurl=file://{{ generic_rpm_install.package_cache_root }}/{{ project }}/{% if ansible_distribution in "Qubes" %}q{% else %}fc{% endif %}$releasever
         enabled=1
         gpgcheck={% if gpgcheck|default(False) %}1{% else %}0{% endif %}
 
         metadata_expire=1
-    dest: /etc/yum.{% if inventory_hostname in groups["qubes-dom0s"] %}real.{% endif %}repos.d/{{ project }}.repo
+    dest: /etc/yum.{% if ansible_distribution in "Qubes" %}real.{% endif %}repos.d/{{ project }}.repo
     mode: 0644
     owner: root
     group: root
