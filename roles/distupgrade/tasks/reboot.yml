@@ -27,7 +27,7 @@
   raw: bash -c 'sleep 1 ; echo -n yes'
   register: after_reboot
   retries: '{{ (timeout|default(600) / 5)|int }}'
-  until: '{{ "yes" in after_reboot.stdout|default("") }}'
+  until: '"yes" in after_reboot.stdout|default("")'
   delay: 5
   when: ansible_connection == "qubes"
   become: False
