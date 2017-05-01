@@ -3,7 +3,7 @@
   shell: rpm -q {{ " ".join(packages) }} && echo "Nothing to do" || qubes-dom0-update -y {{ " ".join(packages) }}
   register: qubes_dom0_install
   when: ansible_distribution == "Qubes"
-  changed_when: "Nothing to do" not in qubes_dom0_install.stdout
+  changed_when: '{{ "Nothing to do" not in qubes_dom0_install.stdout }}'
 
 - name: install software (non-dom0)
   become: true
