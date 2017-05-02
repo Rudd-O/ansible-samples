@@ -30,7 +30,7 @@ running XEP-0163: Personal Eventing Protocol…		PASSED
 running Roster Versioning…		PASSED
 running XEP-0280: Message Carbons…		PASSED
 running XEP-0191: Blocking Command…		PASSED
-running XEP-0045: Multi-User Chat…		FAILED
+running XEP-0045: Multi-User Chat…		PASSED
 running XEP-0198: Stream Management…		PASSED
 running XEP-0313: Message Archive Management…		PASSED
 running XEP-0352: Client State Indication…		PASSED
@@ -39,7 +39,7 @@ running XEP-0065: SOCKS5 Bytestreams (Proxy)…		PASSED
 running XEP-0357: Push Notifications…		PASSED
 running XEP-0368: SRV records for XMPP over TLS…		PASSED
 
-passed 12/13
+passed 13/13
 ```
 
 ## Configuration details
