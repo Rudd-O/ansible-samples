@@ -40,6 +40,11 @@ xmpp:
   - http_upload
   - cloud_notify
   extra_modules: []
+  logging:
+    # Logging to /var/log/prosody/prosody.log can be info or debug.
+    prosody_log: info
+    # Logging to syslog can be info or debug.
+    syslog: info
 # Use the following variables to set up the certificates for your server.
 # An example follows:
 # ssl:
