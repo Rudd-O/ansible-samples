@@ -67,7 +67,7 @@ a conference endpoint named after the subdomain.
 
 You need a DNS entry for the subdomain (`conference.example.com`) if you
 want people from other XMPP servers to join your conferences.  It should probably
-be a CNAME DNS entry pointing to your XMPP server's A record.  See below
+be a `CNAME` DNS entry pointing to your XMPP server's `A` record.  See below
 in the *DNS notes* section.
 
 The variable `xmpp.conference.creators` can be set to "everyone" if you would
