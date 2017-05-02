@@ -21,6 +21,7 @@
     name: deploy-ssl-certs
   tags: ssl
 
+# This task will change every time the modules on disk have changed...
 - name: scavenge module info
   shell: |
     {% for module in xmpp.modules + xmpp.extra_modules %}
@@ -38,10 +39,12 @@
     {% endfor %}
   register: prosodymodulestat
   check_mode: no
+  changed_when: False
   tags:
   - modules
   - config
 
+# ...and the side effect of the prior task changing, is that this task will change too.
 - name: configure prosody modules
   template:
     src: etc/prosody/modules.cfg.lua.j2
@@ -68,17 +71,11 @@
   service:
     name: prosody
     state: '{% if
-               (modulesclone|default({})).changed|default(False)
+               prosodyconfigmodules|changed
                or
-               (linkmodules|default({})).changed|default(False)
-               or
-               (installprosodymodules|default({})).changed|default(False)
-               or
-               (prosodyconfigmodules|default({})).changed|default(False)
-               or
-               sslconf.changed|default(False)
+               sslconf|changed
              %}restarted{% elif
-               prosodyconfig.changed|default(False)
+               prosodyconfig|changed
              %}reloaded{%
                else
              %}started{% endif %}'
