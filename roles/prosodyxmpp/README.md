@@ -2,14 +2,24 @@
 
 This Ansible role deploys a full Prosody XMPP server on your Fedora 25
 (or higher) server.  It also deploys a number of modules to make the operation
-of the server most compatible with [excellent features of modern chat clients
-such as Conversations](https://github.com/siacs/Conversations/blob/master/README.md#xmpp-features),
+of the server most battery-optimized and compatible with [excellent features of
+modern chat clients such as
+Conversations](https://github.com/siacs/Conversations/blob/master/README.md#xmpp-features),
 including:
 
-* [push support](https://github.com/siacs/Conversations#how-do-xep-0357-push-notifications-work);
+* [push support](https://github.com/siacs/Conversations#how-do-xep-0357-push-notifications-work) to greatly minimize idle battery use (via module `cloud_notify`);
+* [stream management](https://xmpp.org/extensions/xep-0198.html) to improve operation in flaky connectivity (via module `smacks`);
+* [message archive management](https://xmpp.org/extensions/xep-0313.html) to receive queued messages after network changes (via module `smacks`);
+* [HTTP file upload](https://xmpp.org/extensions/xep-0363.html) to support (end-to-end encrypted) file transfer to (even offline) users (via module `http_upload`);
+* [message carbons](https://xmpp.org/extensions/xep-0280.html) to get messages across all your devices (via module `carbons`);
+* [client state indication](https://xmpp.org/extensions/xep-0352.html) for superior battery life (via module `csi`);
+* [simple blocking](https://xmpp.org/extensions/xep-0191.html) to make it easy to block annoying people (via module `blocking`);
+* and more!
 
 This is the [compliance tester](https://github.com/iNPUTmice/ComplianceTester#usage)
-result for a server configured with the defaults this role ships with:
+result for a server configured with the defaults this role ships with,
+and whose DNS server is configured according to the recommendations in
+this guide:
 
 ```
 Use compliance suite 'Conversations Compliance Suite' to test example.com
@@ -19,7 +29,7 @@ running XEP-0115: Entity Capabilities…		PASSED
 running XEP-0163: Personal Eventing Protocol…		PASSED
 running Roster Versioning…		PASSED
 running XEP-0280: Message Carbons…		PASSED
-running XEP-0191: Blocking Command…		FAILED
+running XEP-0191: Blocking Command…		PASSED
 running XEP-0045: Multi-User Chat…		FAILED
 running XEP-0198: Stream Management…		PASSED
 running XEP-0313: Message Archive Management…		PASSED
@@ -27,7 +37,9 @@ running XEP-0352: Client State Indication…		PASSED
 running XEP-0363: HTTP File Upload…		PASSED
 running XEP-0065: SOCKS5 Bytestreams (Proxy)…		PASSED
 running XEP-0357: Push Notifications…		PASSED
-passed 10/12
+running XEP-0368: SRV records for XMPP over TLS…		PASSED
+
+passed 12/13
 ```
 
 ## Configuration details
