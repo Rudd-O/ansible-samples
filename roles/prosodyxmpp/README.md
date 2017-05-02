@@ -54,6 +54,9 @@ At the very minimum, you will have to:
   the `ssl` tree define the domain name of your server;
 * add a few JIDs with their initial passwords under `xmpp.jids`.
 
+*Removing accounts:* defining a JID's password to be `None` or empty string causes
+the account to be deleted when the role is run.
+
 ## Prerequisites
 
 ### Firewall notes

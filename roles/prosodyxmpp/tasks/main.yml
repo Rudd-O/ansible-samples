@@ -85,10 +85,8 @@
     enabled: yes
   tags: service
 
-# FIXME: security risk — password printed on the process list.
 - name: configure users
-  script: scripts/syncusers.py '{{ item.key }}' '{{ item.value }}'
+  prosodyusers:
+    jids: '{{ xmpp.jids }}'
   register: prosodyusers
-  changed_when: '{{ "CHANGED" in prosodyusers.stdout }}'
   tags: users
-  with_dict: '{{ xmpp.jids }}'
