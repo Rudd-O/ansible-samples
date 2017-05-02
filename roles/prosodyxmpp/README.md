@@ -133,9 +133,9 @@ $ttl	38400
 .
 
 xmpp                    IN  A               1.2.3.4
-_xmpp-client._tcp       IN  SRV    0 5 5222 xmpp.example.com.
-_xmpp-server._tcp       IN  SRV    0 5 5269 xmpp.example.com.
-_xmpps-client._tcp      IN  SRV    5 5 5223 xmpp.example.com.
+_xmpp-client._tcp       IN  SRV    5 5 5222 xmpp.example.com.
+_xmpp-server._tcp       IN  SRV    5 5 5269 xmpp.example.com.
+_xmpps-client._tcp      IN  SRV    0 5 5223 xmpp.example.com.
 conference              IN  CNAME           xmpp
 .
 .
@@ -144,7 +144,8 @@ conference              IN  CNAME           xmpp
 
 As you can see, you have an `A` record for your XMPP server, followed
 by a number of `SRV` records pointing to your `A` record, then
-a `CNAME` record for the conference server.
+a `CNAME` record for the conference server.  These records prioritize
+client connections over SSL rather than STARTTLS, for added privacy.
 
 For the purposes of SSL validation, clients will *not* treat your
 server as if its domain was the full `A` record `xmpp.example.com`
