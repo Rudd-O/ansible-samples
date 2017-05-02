@@ -3,11 +3,44 @@
 This Ansible role deploys a full Prosody XMPP server on your Fedora 25
 (or higher) server.  It also deploys a number of modules to make the operation
 of the server most compatible with [excellent features of modern chat clients
-such as Conversations](https://github.com/siacs/Conversations/blob/master/README.md#xmpp-features).
+such as Conversations](https://github.com/siacs/Conversations/blob/master/README.md#xmpp-features),
+including:
+
+* [push support](https://github.com/siacs/Conversations#how-do-xep-0357-push-notifications-work);
+
+This is the [compliance tester](https://github.com/iNPUTmice/ComplianceTester#usage)
+result for a server configured with the defaults this role ships with:
+
+```
+Use compliance suite 'Conversations Compliance Suite' to test example.com
+
+Server is Prosody 0.9.12
+running XEP-0115: Entity Capabilities…		PASSED
+running XEP-0163: Personal Eventing Protocol…		PASSED
+running Roster Versioning…		PASSED
+running XEP-0280: Message Carbons…		PASSED
+running XEP-0191: Blocking Command…		FAILED
+running XEP-0045: Multi-User Chat…		FAILED
+running XEP-0198: Stream Management…		PASSED
+running XEP-0313: Message Archive Management…		PASSED
+running XEP-0352: Client State Indication…		PASSED
+running XEP-0363: HTTP File Upload…		PASSED
+running XEP-0065: SOCKS5 Bytestreams (Proxy)…		PASSED
+running XEP-0357: Push Notifications…		PASSED
+passed 10/12
+```
+
+## Configuration details
 
 See the file `defaults/main.yml` for more information on how to configure the
 role from your playbook.  Note that you may have to configure your Ansible's
 `hash_behavior` to `merge` dictionaries.
+
+At the very minimum, you will have to:
+
+* define the `ssl` tree of settings for the domain you will run — the keys of
+  the `ssl` tree define the domain name of your server;
+* add a few JIDs with their initial passwords under `xmpp.jids`.
 
 ## Prerequisites
 
