@@ -21,6 +21,39 @@
     name: deploy-ssl-certs
   tags: ssl
 
+- name: scavenge module info
+  shell: |
+    {% for module in xmpp.modules + xmpp.extra_modules %}
+    if test -d /usr/share/prosody-modules/mod_{{ module|quote }}/ ; then
+      mod=/usr/share/prosody-modules/mod_{{ module|quote }}/
+    elif test -d /usr/lib64/prosody/modules/mod_{{ module|quote }}/ ; then
+      mod=/usr/lib64/prosody/modules/mod_{{ module|quote }}/
+    else
+      mod=/usr/lib64/prosody/modules/mod_{{ module|quote }}.lua
+    fi
+    ls -l --sort=time "$mod" || {
+      echo Module mod_{{ module|quote }} does not exist in /usr/share/prosody-modules or /usr/lib64/prosody/modules >&2
+      exit 48
+    }
+    {% endfor %}
+  register: prosodymodulestat
+  check_mode: no
+  tags:
+  - modules
+  - config
+
+- name: configure prosody modules
+  template:
+    src: etc/prosody/modules.cfg.lua.j2
+    dest: /etc/prosody/modules.cfg.lua
+    owner: root
+    group: prosody
+    mode: 0640
+  register: prosodyconfigmodules
+  tags:
+  - modules
+  - config
+
 - name: configure prosody
   template:
     src: etc/prosody/prosody.cfg.lua.j2
