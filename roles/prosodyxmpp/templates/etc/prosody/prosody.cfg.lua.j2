@@ -120,7 +120,7 @@ pidfile = "/run/prosody/prosody.pid";
 Include "ports.cfg.lua"
 
 {% for host, data in sslconf.result.items() %}
-VirtualHost "{{ host }}"
+VirtualHost "{{ host.replace('"', '\"') }}"
 	enabled = true -- Remove this line to enable this host
 
 	-- Assign this host a certificate for TLS, otherwise it would use the one
@@ -131,4 +131,9 @@ VirtualHost "{{ host }}"
 		key = "{{ data.key.path }}";
 		certificate = "{{ data.assembled_certificate.path }}";
 	}
+
+{% if xmpp.conference.enabled %}
+	Component "{{ xmpp.conference.subdomain.replace('"', '\"') }}.{{ host.replace('"', '\"') }}" "muc"
+{% endif %}
+
 {% endfor %}

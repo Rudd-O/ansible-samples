@@ -9,6 +9,11 @@ xmpp:
     client_starttls: 5222
     client_ssl: 5223
     server: 5269
+  # See README.md Conference support subheading for info on the following conference variables:
+  conference:
+    subdomain: conference
+    creators: local
+    enabled: True
   global_stanzas:
     http_max_content_size: 104857600
     http_upload_file_size_limit: 104857600

@@ -57,6 +57,24 @@ At the very minimum, you will have to:
 *Removing accounts:* defining a JID's password to be `None` or empty string causes
 the account to be deleted when the role is run.
 
+## Conference support
+
+Setting the variable `xmpp.conference.enabled` to True enables the MUC
+(multi-user-conference) feature.  The variable `xmpp.conference.subdomain`
+controls the subdomain used to name the MUC endpoint (it defaults to `conference`).
+Each one of your virtual hosts (derived from the `ssl` variable) will gain
+a conference endpoint named after the subdomain.
+
+You need a DNS entry for the subdomain (`conference.example.com`) if you
+want people from other XMPP servers to join your conferences.  It should probably
+be a CNAME DNS entry pointing to your XMPP server's A record.  See below
+in the *DNS notes* section.
+
+The variable `xmpp.conference.creators` can be set to "everyone" if you would
+like anyone to create conference rooms, "admins" if you would like only the
+server administrators to create conference rooms, and "local" if you'd like only
+people with JIDs on your server to create conference rooms.
+
 ## Prerequisites
 
 ### Firewall notes
@@ -114,17 +132,19 @@ $ttl	38400
 .
 .
 
-xmpp                    IN  A       1.2.3.4
-_xmpp-client._tcp       IN SRV 0 5 5222 xmpp.example.com.
-_xmpp-server._tcp       IN SRV 0 5 5269 xmpp.example.com.
-_xmpps-client._tcp       IN SRV 5 5 5223 xmpp.example.com.
+xmpp                    IN  A               1.2.3.4
+_xmpp-client._tcp       IN  SRV    0 5 5222 xmpp.example.com.
+_xmpp-server._tcp       IN  SRV    0 5 5269 xmpp.example.com.
+_xmpps-client._tcp      IN  SRV    5 5 5223 xmpp.example.com.
+conference              IN  CNAME           xmpp
 .
 .
 .
 ```
 
 As you can see, you have an `A` record for your XMPP server, followed
-by a number of `SRV` records pointing to your `A` record.
+by a number of `SRV` records pointing to your `A` record, then
+a `CNAME` record for the conference server.
 
 For the purposes of SSL validation, clients will *not* treat your
 server as if its domain was the full `A` record `xmpp.example.com`
@@ -134,6 +154,10 @@ Of course, if you set any of the `xmpp.ports.*` variables to `False`
 (which disables the use of the port set to `False`), then remove
 the corresponding DNS record for that port.  Correspondingly, if you change
 any of these ports, you should adjust your DNS configuration to match.
+
+Naturally, if you disable conference support, or change the subdomain
+used for the conference server, you must either remove the DNS entry
+for it, or alter it to matche the subdomain.
 
 See https://prosody.im/doc/dns for more information on the matter.
 
