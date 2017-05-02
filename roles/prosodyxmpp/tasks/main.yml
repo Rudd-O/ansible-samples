@@ -68,16 +68,20 @@
   service:
     name: prosody
     state: '{% if
-               modulesclone.changed|default(False)
+               (modulesclone|default({})).changed|default(False)
                or
-               linkmodules.changed|default(False)
+               (linkmodules|default({})).changed|default(False)
                or
-               prosodyconfig.changed|default(False)
+               (installprosodymodules|default({})).changed|default(False)
+               or
+               (prosodyconfigmodules|default({})).changed|default(False)
                or
                sslconf.changed|default(False)
-               or
-               installprosodymodules.changed|default(False)
-             %}re{% endif %}started'
+             %}restarted{% elif
+               prosodyconfig.changed|default(False)
+             %}reloaded{%
+               else
+             %}started{% endif %}'
     enabled: yes
   tags: service
 
