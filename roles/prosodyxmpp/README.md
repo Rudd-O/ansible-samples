@@ -123,6 +123,13 @@ _xmpps-client._tcp       IN SRV 5 5 5223 xmpp.example.com.
 .
 ```
 
+As you can see, you have an `A` record for your XMPP server, followed
+by a number of `SRV` records pointing to your `A` record.
+
+For the purposes of SSL validation, clients will *not* treat your
+server as if its domain was the full `A` record `xmpp.example.com`
+— they will instead treat your server's domain as as `example.com`.
+
 Of course, if you set any of the `xmpp.ports.*` variables to `False`
 (which disables the use of the port set to `False`), then remove
 the corresponding DNS record for that port.  Correspondingly, if you change
