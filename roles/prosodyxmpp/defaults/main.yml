@@ -33,6 +33,8 @@ xmpp:
   - pep         # ; -- Enables users to publish their mood, activity, playing music and more
   - register    # ; -- Allow users to register on this server using a client and change passwords
   # compliance with Conversations as per https://github.com/siacs/Conversations
+  - privacy
+  - blocking
   - proxy65
   - smacks
   - smacks_offline
