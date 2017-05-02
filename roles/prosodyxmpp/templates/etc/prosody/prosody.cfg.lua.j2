@@ -117,6 +117,8 @@ pidfile = "/run/prosody/prosody.pid";
 {{ k }} = {{ v }}
 {% endfor %}
 
+Include "ports.cfg.lua"
+
 {% for host, data in sslconf.result.items() %}
 VirtualHost "{{ host }}"
 	enabled = true -- Remove this line to enable this host

@@ -1,0 +1,3 @@
+c2s_ports = { {% if xmpp.ports.client_starttls %}{{ xmpp.ports.client_starttls }}{% endif %} };
+legacy_ssl_ports = { {% if xmpp.ports.client_ssl %}{{ xmpp.ports.client_ssl }}{% endif %} };
+s2s_ports = { {% if xmpp.ports.server %}{{ xmpp.ports.server }}{% endif %} };

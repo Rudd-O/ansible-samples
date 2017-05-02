@@ -50,12 +50,24 @@ You will need to open TCP ports on the machine that will act as XMPP server:
 
 * 5000
 * 5222
+* 5223
 * 5269
 * 5281
 
+### SELinux notes
+
+This role works out of the box with SELinux policy as it ships in Fedora.
+
+Changes to any of the three default ports in variables `xmpp.ports.*` will
+likely cause Prosody to fail to listen to said ports.  You will have to add a
+type enforcement exception for your desired port.
+
+Consult role `selinux-module` in this repo for more information on how to
+add exceptions for services.
+
 ### SSL notes
 
-See the instructions for the mailserver recipe in this repo to understand how
+See the instructions for the `mailserver` role in this repo to understand how
 to configure the SSL certificates for your XMPP server.
 
 The SSL certificate must be for the "virtual domain" of your server, not for
@@ -88,14 +100,18 @@ $ttl	38400
 .
 
 xmpp                    IN  A       1.2.3.4
-_xmpp-client._tcp 18000 IN SRV 0 5 5222 xmpp.example.com.
-_xmpp-server._tcp 18000 IN SRV 0 5 5269 xmpp.example.com.
-_xmpps-client._tcp 18000 IN SRV 0 5 5222 xmpp.example.com.
-_xmpps-server._tcp 18000 IN SRV 0 5 5269 xmpp.example.com.
+_xmpp-client._tcp       IN SRV 0 5 5222 xmpp.example.com.
+_xmpp-server._tcp       IN SRV 0 5 5269 xmpp.example.com.
+_xmpps-client._tcp       IN SRV 5 5 5223 xmpp.example.com.
 .
 .
 .
 ```
+
+Of course, if you set any of the `xmpp.ports.*` variables to `False`
+(which disables the use of the port set to `False`), then remove
+the corresponding DNS record for that port.  Correspondingly, if you change
+any of these ports, you should adjust your DNS configuration to match.
 
 See https://prosody.im/doc/dns for more information on the matter.
 

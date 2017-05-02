@@ -45,14 +45,17 @@
   - config
 
 # ...and the side effect of the prior task changing, is that this task will change too.
-- name: configure prosody modules
+- name: configure prosody modules and ports
   template:
-    src: etc/prosody/modules.cfg.lua.j2
-    dest: /etc/prosody/modules.cfg.lua
+    src: etc/prosody/{{ item }}.cfg.lua.j2
+    dest: /etc/prosody/{{ item }}.cfg.lua
     owner: root
     group: prosody
     mode: 0640
-  register: prosodyconfigmodules
+  with_items:
+  - modules
+  - ports
+  register: prosodyconfigrestarts
   tags:
   - modules
   - config
@@ -71,7 +74,7 @@
   service:
     name: prosody
     state: '{% if
-               prosodyconfigmodules|changed
+               prosodyconfigrestarts|changed
                or
                sslconf|changed
              %}restarted{% elif
