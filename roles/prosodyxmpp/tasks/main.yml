@@ -21,23 +21,14 @@
     name: deploy-ssl-certs
   tags: ssl
 
-- name: compute MUC modules
-  set_fact:
-    muc_modules: '{{ ["muc"] if xmpp.conference.enabled else [] }}'
-  tags:
-  - config
-  - modules
-
 # This task will change every time the modules on disk have changed...
 - name: scavenge module info
   shell: |
-    {% for module in xmpp.modules + xmpp.extra_modules + muc_modules %}
+    {% for module in xmpp.modules + xmpp.extra_modules %}
     if test -d /usr/share/prosody-modules/mod_{{ module|quote }}/ ; then
       mod=/usr/share/prosody-modules/mod_{{ module|quote }}/
     elif test -d /usr/lib64/prosody/modules/mod_{{ module|quote }}/ ; then
       mod=/usr/lib64/prosody/modules/mod_{{ module|quote }}/
-    elif test -d /usr/lib64/prosody/modules/{{ module|quote }}/ ; then
-      mod=/usr/lib64/prosody/modules/{{ module|quote }}/
     else
       mod=/usr/lib64/prosody/modules/mod_{{ module|quote }}.lua
     fi

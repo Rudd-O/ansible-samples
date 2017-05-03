@@ -25,7 +25,7 @@ modules_enabled = {
 		--"legacyauth"; -- Legacy authentication. Only used by some old clients and bots.
 
         -- Custom: compliance with Conversations as per https://github.com/siacs/Conversations
-{% for m in xmpp.modules + xmpp.extra_modules + muc_modules %}
+{% for m in xmpp.modules + xmpp.extra_modules %}
                 "{{ m.replace('"', '\"') }}";
 {% endfor %}
 };
