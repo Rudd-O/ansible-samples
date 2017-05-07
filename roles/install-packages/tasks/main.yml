@@ -4,6 +4,7 @@
   register: qubes_dom0_install
   when: ansible_distribution == "Qubes"
   changed_when: '{{ "Nothing to do" not in qubes_dom0_install.stdout }}'
+  notify: '{{ notify|default(omit) }}'
 
 - name: install software (non-dom0)
   become: true
@@ -11,6 +12,7 @@
   when: ansible_distribution != "Qubes"
   register: normal_package_install
   with_items: '{{ packages }}'
+  notify: '{{ notify|default(omit) }}'
 
 - name: set package_install variable
   set_fact:
