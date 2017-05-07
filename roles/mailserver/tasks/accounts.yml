@@ -19,7 +19,7 @@
   become: True
   become_user: '{{ item.name }}'
   register: create_inbox
-  changed_when: "CREATED" in create_inbox.stdout
+  changed_when: '"CREATED" in create_inbox.stdout'
   with_items: '{{ unix_users }}'
 
 - name: create user spambox
@@ -27,5 +27,5 @@
   become: True
   become_user: '{{ item.name }}'
   register: create_spambox
-  changed_when: "CREATED" in create_spambox.stdout
+  changed_when: '"CREATED" in create_spambox.stdout'
   with_items: '{{ unix_users }}'
