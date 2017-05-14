@@ -1,10 +1,14 @@
 spectrum2:
-  software_origin:
-    source: https://github.com/hanzz/spectrum2/
-    revision: aaf3ead9f21a8e8d463b36f34a378fa7aaf43f76
   # Can also be:
   # software_origin: package
   # See README for more information.
+  software_origin:
+    source: https://github.com/hanzz/spectrum2/
+    revision: aaf3ead9f21a8e8d463b36f34a378fa7aaf43f76
+  # Only used if software_origin != 'package'.
+  build_dir: /usr/src/spectrum2
+  # Only used if software_origin != 'package'.
+  install_prefix: /usr/local
   user: spectrum2
   group: spectrum2
   log_level: warn

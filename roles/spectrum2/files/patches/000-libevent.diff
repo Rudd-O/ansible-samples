@@ -1,0 +1,12 @@
+diff -up backends/libpurple/geventloop.cpp backends/libpurple/geventloop.cpp
+--- backends/libpurple/geventloop.cpp	2017-05-14 04:33:57.316887473 +0000
++++ backends/libpurple/geventloop.cpp	2017-05-14 04:34:16.575887473 +0000
+@@ -25,7 +25,7 @@
+ #undef write
+ #endif
+ #ifdef WITH_LIBEVENT
+-#include "event.h"
++#include <event.h>
+ #endif
+ 
+ #include "purple_defs.h"

@@ -8,7 +8,11 @@
   tags:
   - package
 
-# FIXME: do case when software_origin != package
+- name: install prosody modules from Mercurial
+  include: install-from-git.yml
+  when: spectrum2.software_origin != "package"
+  tags:
+  - source
 
 - name: configure Spectrum2 configuration file
   template:

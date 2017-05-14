@@ -1,0 +1,131 @@
+---
+
+- name: install build dependencies
+  package: name={{ item }} state=present
+  with_items:
+    - git
+    - libidn-devel
+    - swiften-devel
+    - libpurple-devel
+    - protobuf-devel
+    - libcommuni-devel
+    - boost-devel
+    - libpqxx-devel
+    - popt-devel
+    - libevent-devel
+    - mariadb-devel
+    - log4cxx-devel
+    - openssl-devel
+    - sqlite-devel
+    - libcurl-devel
+    - qt-devel
+    - avahi-devel
+    - cmake
+    - rsync
+  tags: deps
+
+- name: create prosody source modules directories
+  file:
+      name: '{{ item }}'
+      state: directory
+      mode: 0775
+      owner: root
+      group: nobody
+  with_items:
+  - '{{ spectrum2.build_dir }}'
+
+- block:
+  - name: clone spectrum2 project
+    git:
+        repo: '{{ spectrum2.software_origin.source }}'
+        dest: '{{ spectrum2.build_dir }}/git'
+        version: '{{ spectrum2.software_origin.revision }}'
+    register: gitclone
+
+  - name: copy patches
+    copy:
+        src: patches/
+        dest: '{{ spectrum2.build_dir }}/patches/'
+    register: syncpatches
+
+  - name: clear build flag
+    shell: rm -f {{ spectrum2.build_dir|quote }}/.built
+    when: gitclone.changed or syncpatches.changed
+
+  - name: get build flag
+    shell: |
+      x=$(cat {{ spectrum2.build_dir|quote }}/.built)
+      y={{ spectrum2.install_prefix|quote }}
+      if [ "$x" == "$y" ] ; then echo YES ; else echo NO ; fi
+    register: getbuildflag
+    check_mode: no
+    changed_when: no
+
+  - name: copy source to work directory
+    shell: rsync -a --delete {{ spectrum2.build_dir|quote }}/git/ {{ spectrum2.build_dir|quote }}/workdir/
+    register: rsyncsource
+    when: '"NO" in getbuildflag.stdout'
+
+  - name: apply patches
+    shell: |
+        set -e
+        cd {{ spectrum2.build_dir|quote }}/workdir
+        for patch in ../patches/*.diff ; do
+            patch -p0 < "$patch"
+        done
+    register: patch
+    when: '"NO" in getbuildflag.stdout'
+
+  - name: configure and build
+    shell: |
+        set -e
+        mkdir -p {{ spectrum2.build_dir|quote }}/build
+        cd {{ spectrum2.build_dir|quote }}/build
+        cmake ../workdir -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX='{{ spectrum2.install_prefix }}'
+        make -j3
+        echo {{ spectrum2.install_prefix|quote }} >> {{ spectrum2.build_dir|quote }}/.built
+    register: configbuild
+    when: '"NO" in getbuildflag.stdout'
+  tags:
+  - build
+  become: true
+  become_user: nobody
+    
+- name: install
+  shell: |
+    set -e
+    cd {{ spectrum2.build_dir|quote }}/build
+    tmpdir=`mktemp -d`
+    cleanup() { rm -rf "$tmpdir" ; }
+    trap cleanup EXIT
+    make install DESTDIR="$tmpdir"
+    getent group {{ spectrum2.group|quote }} >/dev/null || groupadd -r {{ spectrum2.group|quote }}
+    getent passwd {{ spectrum2.user|quote }} >/dev/null || \
+        useradd -r -g {{ spectrum2.user|quote }} -d /var/lib/spectrum2 \
+                -s /sbin/nologin \
+                -c "spectrum XMPP transport" {{ spectrum2.user|quote }}
+    rsync -a --ignore-existing "$tmpdir"/etc/spectrum2/ /etc/spectrum2/
+    chown -R root.{{ spectrum2.group|quote }} /etc/spectrum2/*.cfg* /etc/spectrum2/transports/*.cfg*
+    mkdir -p {{ spectrum2.install_prefix|quote }}
+    chmod 640 /etc/spectrum2/*.cfg* /etc/spectrum2/transports/*.cfg*
+    for x in bin include lib ; do
+        x2="$x"
+        arch=`arch`
+        if [ "$x" == "lib" -a "$arch" == "x86_64" ] ; then
+            x2=lib64
+        fi
+        prefix={{ spectrum2.install_prefix|quote }}
+        rsync -a "$tmpdir"{{ spectrum2.install_prefix }}/$x/ {{ spectrum2.install_prefix }}/$x2/
+        if [ "$x" == "lib" -a "$prefix" != "/usr" ] ; then
+            echo {{ spectrum2.install_prefix }}/$x2 > /etc/ld.so.conf.d/spectrum2.conf
+            ldconfig
+        fi
+    done
+    rsync -a "$tmpdir"/var/lib/spectrum2_manager/ /var/lib/spectrum2_manager/
+    dirs="/var/log/spectrum2 /var/run/spectrum2 /var/lib/spectrum2"
+    mkdir -p $dirs
+    chmod 770 $dirs /var/lib/spectrum2_manager/
+    chown {{ spectrum2.user|quote }}.{{ spectrum2.group|quote }} $dirs /var/lib/spectrum2_manager
+  register: install
+  tags:
+  - install

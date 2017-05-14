@@ -1,0 +1,39 @@
+diff -up ./spectrum_manager/src/managerconfig.cpp ./spectrum_manager/src/managerconfig.cpp
+--- ./spectrum_manager/src/managerconfig.cpp	2017-05-14 10:30:44.172000000 +0000
++++ ./spectrum_manager/src/managerconfig.cpp	2017-05-14 10:31:16.039000000 +0000
+@@ -44,7 +44,7 @@ bool ManagerConfig::load(const std::stri
+ 		("database.password", value<std::string>()->default_value(""), "Database Password.")
+ 		("database.port", value<int>()->default_value(0), "Database port.")
+ 		("database.prefix", value<std::string>()->default_value(""), "Prefix of tables in database")
+-		("logging.config", value<std::string>()->default_value("/etc/spectrum2/manager_logging.cfg"), "Logging configuration file")
++		("logging.config", value<std::string>()->default_value("/etc/spectrum2/manager-logging.cfg"), "Logging configuration file")
+ 	;
+ 
+ 	store(parse_config_file(ifs, opts), m_variables);
+diff -up ./spectrum/src/backend-logging.cfg ./spectrum/src/backend-logging.cfg
+--- ./spectrum/src/backend-logging.cfg	2017-05-14 10:32:36.566000000 +0000
++++ ./spectrum/src/backend-logging.cfg	2017-05-14 10:33:12.054000000 +0000
+@@ -1,4 +1,4 @@
+-log4j.rootLogger=debug, R
++log4j.rootLogger=warn, R
+ 
+ log4j.appender.R=org.apache.log4j.RollingFileAppender
+ log4j.appender.R.File=/var/log/spectrum2/${jid}/backends/backend-${id}.log
+diff -up ./spectrum/src/logging.cfg ./spectrum/src/logging.cfg
+--- ./spectrum/src/logging.cfg	2017-05-14 10:32:47.524000000 +0000
++++ ./spectrum/src/logging.cfg	2017-05-14 10:33:12.055000000 +0000
+@@ -1,4 +1,4 @@
+-log4j.rootLogger=debug, R
++log4j.rootLogger=warn, R
+ 
+ log4j.appender.R=org.apache.log4j.RollingFileAppender
+ log4j.appender.R.File=/var/log/spectrum2/${jid}/spectrum2.log
+diff -up ./spectrum/src/manager-logging.cfg ./spectrum/src/manager-logging.cfg
+--- ./spectrum/src/manager-logging.cfg	2017-05-14 10:32:41.750000000 +0000
++++ ./spectrum/src/manager-logging.cfg	2017-05-14 10:33:46.084000000 +0000
+@@ -1,4 +1,4 @@
+-log4j.rootLogger=debug, R
++log4j.rootLogger=warn, R
+ 
+ log4j.appender.R=org.apache.log4j.RollingFileAppender
+ log4j.appender.R.File=/var/log/spectrum2/spectrum_manager.log
