@@ -19,8 +19,11 @@ spectrum2:
       # Most of these options are documented at
       # http://spectrum.im/documentation/frontends/xmpp.html
       # The name of user/group Spectrum runs as.
-      # JID that Spectrum instance will log to XMPP server as.
+      # JID that Spectrum instance will log to th XMPP server as.
+      # Usually a subdomain of the XMPP server.
       component_jid: spectrum.example.com
+      # Optional: a JID that can administrate the service.
+      admin_jid: admin@example.com
       # Domain names of XMPP servers allowed to use this gateway.
       # Serves as whitelist when enable_public_registration is 0.
       # See the README.md file for how to set up DNS records.
