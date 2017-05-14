@@ -14,9 +14,17 @@ xmpp:
     subdomain: conference
     creators: local
     enabled: True
+  # The following key/value list causes external components to be
+  # added to your VirtualHosts as <key>.<domain> with password
+  # <value>.
+  # components:
+  #   spectrum: spectrumpassword
   global_stanzas:
     http_max_content_size: 104857600
     http_upload_file_size_limit: 104857600
+    # You can use this to change the components listen port, but watch
+    # out for SELinux access denied listening on a different port.
+    # components_listen_port: 5347
   modules_origin:
     source: https://hg.prosody.im/prosody-modules/
     revision: 81956bb99289

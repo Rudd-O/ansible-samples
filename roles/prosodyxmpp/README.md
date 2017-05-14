@@ -75,6 +75,38 @@ like anyone to create conference rooms, "admins" if you would like only the
 server administrators to create conference rooms, and "local" if you'd like only
 people with JIDs on your server to create conference rooms.
 
+# External components
+
+You can list external components (gateways) and their credentials under the
+`xmpp.components` variable (see `defaults/main.yml` for a sample.
+A component will be added for each virtual host of your XMPP server.
+The JID of the component will be the concatenation of the key and the domain
+of the virtual host.  The password of the component will be the value of
+the component you listed.
+
+Here is a sample:
+
+```yaml
+ssl:
+  ...
+  example.com:
+    ...
+xmpp:
+  ...
+  components:
+    fbgateway: ARSNE2ki24n908rARTN2e34ni23
+    # This would declare a component JID "fbgateway.example.com"
+    # in the Prosody configuration.
+  ...
+```
+
+Do not forget that you need a DNS entry for the component as well.  This
+entry should probably be created similarly to the DNS entry for the
+conference service.
+
+Once you have listed your components and applied the configuration, you
+can set up the external components such as [http://spectrum.im](Spectrum.im).
+
 ## Prerequisites
 
 ### Firewall notes

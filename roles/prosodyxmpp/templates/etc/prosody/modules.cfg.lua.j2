@@ -26,7 +26,7 @@ modules_enabled = {
 
         -- Custom: compliance with Conversations as per https://github.com/siacs/Conversations
 {% for m in xmpp.modules + xmpp.extra_modules %}
-                "{{ m.replace('"', '\"') }}";
+                "{{ m.replace('"', '\\"') }}";
 {% endfor %}
 };
 
