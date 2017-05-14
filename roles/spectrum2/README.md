@@ -7,13 +7,56 @@ between your XMPP server and many other non-XMPP protocols.
 
 ## Setup
 
-This is an Ansible role with many variables.
+### The basics
+
+This software works in concert with an XMPP server to provide gateway services
+to other IM and non-IM services:
+
+* Your XMPP server runs normally on a machine.
+* This role deploys the Spectrum2 frontend and backends.
+* The Spectrum2 frontend that gets deployed connects
+  to your XMPP Server.
+* The Spectrum2 backends (services, see below) connect to
+  the Spectrum2 frontend.
+* The Spectrum2 frontend mediates the communications between its
+  own backends and your XMPP server, presenting those backends as
+  *services* (also known as *transports*) to your XMPP server.
+* You — the end user — gain the ability to use those services
+  right from your XMPP client.
+
+```
+---------------         ---------------
+| Your client |  ---->  | XMPP server |
+---------------         ---------------
+                               |
+                               v
+                        ---------------
+                        |  Spectrum2  |
+         /------------  |  frontend   |
+         |              ---------------
+         |                     |
+         v                     v
+   --------------       ---------------
+   |  Spectrum2 |       |  Spectrum2  |
+   |   backend  |       |   backend   |
+   --------------       ---------------
+          |                    |
+          v                    v
+   --------------       ---------------
+   |   Google   |       |   Twitter   |
+   |  Hangouts  |       |             |
+   --------------       ---------------
+```
+
+This role is in charge of setting up the Spectrum2 frontend and the Spectrum2
+backends of your choice.  After that, you are in charge of registering your
+accounts with the running backends (see usage instructions below).
+
+### Configuration details
 
 See the file `defaults/main.yml` for more information on how to configure the
 role from your playbook.  Note that you may have to configure your Ansible's
 `hash_behavior` to `merge` dictionaries.
-
-### Configuration details
 
 At the very minimum, you will have to:
 
@@ -47,7 +90,7 @@ role](../prosodyxmpp/), the DNS record should probably be a `CNAME` DNS entry po
 XMPP server's `A` record.  See the `README.md` file for the `prosodyxmpp`
 role for more information.
 
-## Using the transport
+## Using the transports
 
 Most clients don't support registering with transports, though they will
 operate normally once you've registered.  Fortunately, there are some
@@ -58,7 +101,7 @@ Using a compliant client like Gajim, log onto your XMPP account as usual.
 Then, open the *Discover services* dialog.  You will see the transport listed
 there.
 
-Register with the transport now.  It will prompt you for the credentials of
+Register with a transport now.  It will prompt you for the credentials of
 the service you're planning to log onto.
 
 For example, if you're logging to Google Hangouts, you'll want to specify
@@ -71,5 +114,7 @@ transport is logging on.  If that happens, tell Google it's fine, then
 log out of your XMPP server, and then log into it again in 15 minutes.
 You should receive a notification that your Google Hangouts contacts
 are being added to your XMPP account's roster.
+
+Repeat the same process for the other transports.
 
 That's it!
