@@ -1,0 +1,67 @@
+- name: install Spectrum2 IM
+  include_role:
+    name: generic-rpm-install
+  vars:
+    project: spectrum2
+    package: spectrum2
+  when: spectrum2.software_origin == "package"
+  tags:
+  - package
+
+# FIXME: do case when software_origin != package
+
+- name: configure Spectrum2 configuration file
+  template:
+    src: etc/spectrum2/transports/spectrum.cfg
+    dest: /etc/spectrum2/transports/{{ item.key }}.cfg
+    owner: root
+    group: '{{ spectrum2.group }}'
+    mode: 0640
+  with_dict: '{{ spectrum2.services }}'
+  vars:
+    service: '{{ item.value }}'
+  when: service and not item.key.startswith("SAMPLE_") 
+  register: addservice
+  tags:
+  - config
+
+- name: delete Spectrum2 configuration file
+  file:
+    name: /etc/spectrum2/transports/{{ item.key }}.cfg
+    state: absent
+  with_dict: '{{ spectrum2.services }}'
+  vars:
+    service: '{{ item.value }}'
+  when: not service
+  register: deleteservice
+  tags:
+  - config
+
+- name: configure Spectrum2 logging
+  template:
+    src: etc/spectrum2/{{ item }}.cfg
+    dest: /etc/spectrum2/{{ item }}.cfg
+    owner: root
+    group: '{{ spectrum2.group }}'
+    mode: 0640
+  with_items:
+  - logging
+  - backend-logging
+  register: changelogs
+  tags:
+  - config
+
+- name: enable and start Spectrum2
+  service:
+    name: spectrum2
+    state: '{% if
+               addservice|changed
+               or
+               changelogs|changed
+               or
+               deleteservice|changed
+             %}restarted{%
+               else
+             %}started{% endif %}'
+    enabled: yes
+  tags: service

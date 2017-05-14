@@ -1,0 +1,104 @@
+spectrum2:
+  software_origin:
+    source: https://github.com/hanzz/spectrum2/
+    revision: aaf3ead9f21a8e8d463b36f34a378fa7aaf43f76
+  # Can also be:
+  # software_origin: package
+  # See README for more information.
+  user: spectrum2
+  group: spectrum2
+  log_level: warn
+  services:
+    # A service with False as its value causes the deletion of
+    # the service.
+    nonexistent: False
+    # A service prefixed with SAMPLE_ will be ignored.
+    # You should define your own services based on this
+    # template.
+    SAMPLE_xmpp:
+      # Most of these options are documented at
+      # http://spectrum.im/documentation/frontends/xmpp.html
+      # The name of user/group Spectrum runs as.
+      # JID that Spectrum instance will log to XMPP server as.
+      component_jid: spectrum.example.com
+      # Domain names of XMPP servers allowed to use this gateway.
+      # Serves as whitelist when enable_public_registration is 0.
+      # See the README.md file for how to set up DNS records.
+      allowed_servers:
+      - example.org 
+      # Password used to connect the XMPP server.
+      component_password: password
+      # XMPP server to which Spectrum connects in gateway mode.
+      # The default assumes Spectrum runs on the same host as
+      # the XMPP server it connects to.
+      xmpp_server_address: localhost
+      # XMPP server port.  This is the port your server is
+      # configured to listen for XMPP components.
+      xmpp_server_port: 5347
+      # Interface on which Spectrum listens for backends.
+      backend_listen_address: localhost
+      # Port on which Spectrum listens for backends.
+      # By default Spectrum chooses random backend port and there's
+      # no need to change it normally.  But we want to support SELinux
+      # so we will need to fix the port.
+      backend_listen_port: 10001
+      # Number of users per one legacy network backend.
+      # With Skype it's always 1.
+      users_per_backend: 10
+      backend:
+        # Component of the path to backend binary.
+        # Will resolve to /usr/bin/spectrum2_<< name >>_backend
+        name: libpurple
+        # name: libcommuni
+        libpurple:
+          # For /usr/bin/spectrum2_libpurple_backend
+          # This is the protocol ID that libpurple will configure.
+          protocol_id: prpl-jabber
+          # protocol_id: prpl-msn
+          # protocol_id: prpl-icq
+          #   skypeweb plugin
+          # protocol_id: prpl-skypeweb
+          #   facebook plugin
+          # protocol: prpl-facebook
+      identity:
+        # Name of Spectrum instance in service discovery.
+        name: Spectrum XMPP transport
+        # Type of transport ("msn", "icq", "xmpp").
+        # Check http://xmpp.org/registrar/disco-categories.html#gateway
+        type: xmpp
+      database:
+        # Database backend type.
+        # "sqlite3", "mysql", "pqxx", or "none" without database backend.
+        type: sqlite3
+        # SQLite3 defaults to %{_localstatedir}/spectrum2/$jid/database.sql
+        # You can specify a different path (writable to Spectrum IM)
+        # if you so choose.
+        # Other databases require the name.
+        # name: /var/lib/spectrum2/$jid/database.sql
+        # Database server.  Unneeded for SQLite3.
+        # server: localhost
+        # Database server port.  Unneeded for SQLite3.
+        # port: 0
+        # Database server user.  Unneeded for SQLite3.
+        # user: user
+        # Database server password.  Unneeded for SQLite3.
+        # password: password
+        # Prefix used for database tables.  Useful for shared databases.s
+        # tables_prefix: spectrum_
+        # Database connection string.  Only for pqxx.  Overrides
+        # database server, user, password.
+        # connectionstring: host=localhost user=specturm password=secret
+      registration:
+        # Enable public registration.  See option service.allowed_servers here.
+        enable_public_registration: 0
+        # The following suboptions set text to display on the user registration form.
+        form_display:
+          username_label: 'XMPP JID (e.g. user@server.tld):'
+          instructions: 'Enter your remote XMPP JID and password as well as your local username and password'
+          local_username_label: 'Local username (without @server.tld):'
+        # If True a local jabber account on <local_account_server> is needed
+        # for transport registration, the idea is to enable public registration
+        # from other servers, but only for users, who have already local accounts
+        # require_local_account: 0
+        # local_account_server: localhost
+        # local_account_server_timeout: 10000

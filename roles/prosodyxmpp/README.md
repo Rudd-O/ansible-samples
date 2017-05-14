@@ -106,6 +106,8 @@ conference service.
 
 Once you have listed your components and applied the configuration, you
 can set up the external components such as [http://spectrum.im](Spectrum.im).
+[This repository has a role](../spectrum2/) which will set up Spectrum for you
+as an external component on the same server as your Prosody XMPP server.
 
 ## Prerequisites
 
