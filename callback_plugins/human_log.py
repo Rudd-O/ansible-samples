@@ -17,6 +17,12 @@ from ansible.vars.unsafe_proxy import AnsibleUnsafeText
 class LiteralText(unicode): pass
 
 
+def ColorLiteralText(text, color):
+    if not isinstance(text, basestring):
+        text = unicode(text)
+    return LiteralText(stringc(text, color))
+
+
 class MyDumper(AnsibleDumper):
 
     def __init__(self, *a, **kw):
@@ -221,14 +227,14 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
     banner = banner + stringc(" (%s%s)" % (typ, path), color="bright gray")
     if prefix:
         banner = prefix + " " + banner
-    if isinstance(res, basestring):
-        res = LiteralText(stringc(res, color))
+    if isinstance(res, (basestring, int, float)):
+        res = ColorLiteralText(res, color)
     elif len(res) == 1 and hasattr(res, "items"):
         k ,v = res.keys()[0], res.values()[0]
         del res[k]
         if hasattr(v, "items"):
-            v = dict((LiteralText(stringc(x, color)), y) for x, y in v.items())
-        res[LiteralText(stringc(k, color))] = v
+            v = dict((ColorLiteralText(x, color), y) for x, y in v.items())
+        res[ColorLiteralText(k, color)] = v
     banner = LiteralText(stringc(banner, color))
     res = {banner: res}
     c = StringIO.StringIO()
