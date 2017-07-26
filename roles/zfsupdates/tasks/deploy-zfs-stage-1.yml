@@ -6,7 +6,6 @@
   changed_when: False
   register: pkgconffile
   tags:
-  - zfs
   - yum
   - ini
 
@@ -18,7 +17,6 @@
     value: kernel, kernel-modules, kernel-core, kernel-devel
   when: "ansible_distribution != 'Qubes'"
   tags:
-  - zfs
   - yum
   - ini
 
@@ -32,7 +30,6 @@
   changed_when: "{{ 'CHANGED' in insertmarker.stdout }}"
   when: "ansible_distribution == 'Qubes'"
   tags:
-  - zfs
   - yum
   - ini
 
@@ -43,7 +40,6 @@
     content: "installonlypkgs=kernel, kernel-modules, kernel-core, kernel-devel, kernel-qubes-vm"
   when: "ansible_distribution == 'Qubes'"
   tags:
-  - zfs
   - yum
   - ini
 
@@ -73,8 +69,6 @@
   with_items: '{{ zfs_packages }}'
   when: "ansible_distribution != 'Qubes'"
   register: upgrade_zfs_nondom0
-  tags:
-  - zfs
 
 - name: upgrade ZFS RPMs (Qubes)
   shell: rpm -q {{ " ".join(zfs_packages) }} || qubes-dom0-update -y {{ " ".join(zfs_packages) }}
@@ -92,8 +86,6 @@
     done
   register: unitpresets
   changed_when: '{{ "systemd" in unitpresets.stderr }}'
-  tags:
-  - zfs
 
 - name: test that GRUB ZFS fixer RPM is installed
   shell: rpm -q grub-zfs-fixer && echo YES || echo NO
@@ -112,8 +104,6 @@
 
 - name: remove zfs-test RPM
   package: name=zfs-test state=absent
-  tags:
-  - zfs
 
 - name: sanity-check grub2-mkconfig
   shell: |
@@ -129,5 +119,3 @@
 - name: touch marker file after executed upgrade
   shell: touch /.zfsreinstallneeded
   when: upgrade_zfs
-  tags:
-  - zfs
