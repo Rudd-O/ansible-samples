@@ -67,17 +67,18 @@
 - name: upgrade ZFS RPMs (Fedora)
   package: name={{ item }} state=latest
   with_items: '{{ zfs_packages }}'
-  when: "ansible_distribution != 'Qubes'"
   register: upgrade_zfs_nondom0
 
 - name: upgrade ZFS RPMs (Qubes)
-  shell: rpm -q {{ " ".join(zfs_packages) }} || qubes-dom0-update -y {{ " ".join(zfs_packages) }}
+  shell: qubes-dom0-update -y {{ " ".join(zfs_packages) }}
   when: ansible_distribution == "Qubes"
   register: upgrade_zfs_dom0
   changed_when: '{{ upgrade_zfs_dom0.stdout.find("Nothing to do.") == -1 }}'
 
 - set_fact:
-    upgrade_zfs: '{{ (upgrade_zfs_nondom0 is defined and upgrade_zfs_nondom0.changed|default(False)) or (upgrade_zfs_dom0 is defined and upgrade_zfs_dom0.changed|default(False)) }}'
+    upgrade_zfs_nondom0_check: '{{ upgrade_zfs_nondom0.changed|default(False) }}'
+    upgrade_zfs_dom0_check: '{{ upgrade_zfs_dom0 is defined and upgrade_zfs_dom0.changed|default(False) }}'
+    upgrade_zfs: '{{ upgrade_zfs_nondom0.changed|default(False) or (upgrade_zfs_dom0 is defined and upgrade_zfs_dom0.changed|default(False)) }}'
 
 - name: ensure that ZFS unit files are active
   shell: |
