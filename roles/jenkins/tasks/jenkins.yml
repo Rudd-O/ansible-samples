@@ -26,6 +26,10 @@
     hudson.tasks.Mailer.xml: '0600'
     jenkins.model.JenkinsLocationConfiguration.xml: '0600'
     nodeMonitors.xml: '0644'
+    jenkins.CLI.xml: '0644'
+    jenkins.model.DownloadSettings.xml: '0644'
+    jenkins.security.QueueItemAuthenticatorConfiguration.xml: '0644'
+    jenkins.security.UpdateSiteWarningsConfiguration.xml: '0644'
 
 # may be needed in the future
 # /etc/tmpfiles.d/jenkins.conf:
