@@ -7,12 +7,14 @@
   when: ansible_distribution in "Fedora Qubes"
   tags:
   - generic_rpm_install
+  - generic-rpm-install
 
 - name: clean obsolete files in shared directory
   file: name='/usr/src/{{ project }}' state=absent
   when: ansible_distribution in "Fedora Qubes"
   tags:
   - generic_rpm_install
+  - generic-rpm-install
 
 - name: synchronize updated RPMs
   copy:
@@ -22,6 +24,7 @@
   tags:
   - synchronize
   - generic_rpm_install
+  - generic-rpm-install
 
 - name: synchronize updated RPMs
   synchronize:
@@ -35,6 +38,7 @@
   - zfs
   - synchronize
   - generic_rpm_install
+  - generic-rpm-install
 
 - name: install createrepo
   include_role:
@@ -45,6 +49,7 @@
   when: ansible_distribution in "Fedora Qubes"
   tags:
   - generic_rpm_install
+  - generic-rpm-install
 
 - name: create repo file
   copy:
@@ -64,6 +69,7 @@
   register: repofile
   tags:
   - generic_rpm_install
+  - generic-rpm-install
 
 - name: update repository
   shell: |
@@ -113,12 +119,14 @@
   changed_when: "{{ 'REGEN' in updaterepo.stdout or 'RELINK' in updaterepo.stdout }}"
   tags:
   - generic_rpm_install
+  - generic-rpm-install
 
 - name: install package
   package: pkg={{ package }} state=latest
   when: ansible_distribution in "Fedora Qubes" and package is defined
   tags:
   - generic_rpm_install
+  - generic-rpm-install
   register: generic_rpm_install
 
 - set_fact:
@@ -126,3 +134,4 @@
   when: ansible_distribution in "Fedora Qubes" and register_var is defined
   tags:
   - generic_rpm_install
+  - generic-rpm-install
