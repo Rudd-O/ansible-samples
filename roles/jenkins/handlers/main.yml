@@ -1,5 +1,7 @@
 ---
 
+# Copied to generic-build-job/handlers/main.yml
+
 - name: reload jenkins
   uri:
     url: '{{ jenkins.url }}/reload'
