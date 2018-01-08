@@ -197,6 +197,9 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
             # Subject to some exceptions, of course.
             res = res[res.keys()[0]]
 
+    if "include_role" in res:
+        res["include_role"] = "%s" % res["include_role"]
+
     if item is not None or item_label is not None:
         if not item and item_label is not None:
             item = item_label
@@ -215,11 +218,14 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
             res = collections.OrderedDict({host: res})
         else:
             res = host
+
     banner = task.get_name()
     if ":" in banner:
         banner = banner.replace(u":", u"—")
     if is_handler:
         typ = "handler"
+    elif banner == "include_role":
+        typ = "include_role"
     else:
         typ = "task"
     if task.get_path():
