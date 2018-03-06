@@ -56,7 +56,7 @@
                 echo "$out" | grep -q ': installed' || { echo $module is not installed >&2 ; continue ; }
               elif [ $action == remove ] ; then
                 out=`dkms status -m $module -k $ver -v $dkmsver`
-                echo "$out" | grep -q ': built' || { echo $module is not built >&2 ; continue ; }
+                echo "$out" | grep -Eq ': (built|added)' || { echo $module is not built or added >&2 ; continue ; }
               fi
               out=`dkms $action --directive REMAKE_INITRD=no -m $module -k $ver -v $dkmsver 2>&1` || ret=$?
               echo "$out" >&2
