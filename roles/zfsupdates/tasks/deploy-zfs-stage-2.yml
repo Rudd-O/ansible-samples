@@ -62,6 +62,7 @@
               echo "$out" >&2
               echo "$out" | grep -q "is not currently installed" && continue || true
               echo "$out" | grep -q "is no instance of" && continue || true
+              echo "$out" | grep -q "failed to remove.*No such file or directory" && continue || true
               if [ x$ret != x0 ] ; then echo "DKMS $action for $ver exited with return code $ret" >&2 ; exit $ret ; fi
               echo YES
             fi
