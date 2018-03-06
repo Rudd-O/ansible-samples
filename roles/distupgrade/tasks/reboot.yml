@@ -3,7 +3,7 @@
   when: ansible_connection != "ssh" and ansible_connection != "qubes" and ansible_connection != "smart"
 
 - name: run reboot command
-  shell: sleep 2 && '{{ reboot_command|default("reboot") }}'
+  shell: 'sleep 2 && {{ reboot_command|default("reboot") }}'
   ignore_errors: true
   async: 1
   poll: 0
