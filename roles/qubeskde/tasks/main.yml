@@ -16,11 +16,11 @@
       }
   become: true
   register: kscreensaverfix
-  changed_when: '{{ "ALREADY" not in kscreensaverfix.stdout }}'
+  changed_when: '"ALREADY" not in kscreensaverfix.stdout'
   when: ansible_distribution == "Qubes"
 - name: fix color palette
   shell: test -d "$HOME"/.local/share/qubes-kde || { echo YES ; /usr/bin/qubes-generate-color-palette ; }
   become: false
   register: dom0palette
-  changed_when: '{{ "YES" in dom0palette.stdout }}'
+  changed_when: '"YES" in dom0palette.stdout'
   when: ansible_distribution == "Qubes"

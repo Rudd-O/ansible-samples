@@ -45,4 +45,4 @@
       fi
     done
   register: linkmodules
-  changed_when: '{{ "CHANGED" in linkmodules.stderr }}'
+  changed_when: '"CHANGED" in linkmodules.stderr'

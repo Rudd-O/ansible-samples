@@ -13,7 +13,7 @@
   - name: update initial packages in qubes-dom0-update mode
     shell: qubes-dom0-update -y {{ base_packages }} --releasever {{ targetdistrover|int }}
     register: qubes_dom0_base_package_upgrade
-    changed_when: '{{ "Nothing to do" not in qubes_dom0_base_package_upgrade.stdout }}'
+    changed_when: '"Nothing to do" not in qubes_dom0_base_package_upgrade.stdout'
   - name: execute upgrade in qubes-dom0-update mode
     shell: qubes-dom0-update -y --releasever {{ targetdistrover|int }}
   when: method|default(None) == "qubes-dom0-update"

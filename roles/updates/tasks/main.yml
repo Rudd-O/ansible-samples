@@ -32,7 +32,7 @@
   when: ansible_distribution in "Qubes"
   register: do_updates_dom0
   failed_when: do_updates_dom0.rc != 0
-  changed_when: '{{ "Running transaction" in do_updates_dom0.stdout }}'
+  changed_when: '"Running transaction" in do_updates_dom0.stdout'
 
 - name: redo akmods
   shell: if test -f /usr/sbin/akmods ; then akmods --force ; fi

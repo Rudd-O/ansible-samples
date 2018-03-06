@@ -25,4 +25,4 @@
       dracut -f --regenerate-all && echo CHANGED regenerated all initial RAM disks
   register: regenramfs
   when: ansible_distribution in "Fedora Qubes"
-  changed_when: "{{ 'CHANGED' in regenramfs.stdout }}"
+  changed_when: "'CHANGED' in regenramfs.stdout"

@@ -8,7 +8,7 @@
       echo CHANGED
     done
   register: sieve_symlinks
-  changed_when: '{{ "CHANGED" in sieve_symlinks.stdout }}'
+  changed_when: '"CHANGED" in sieve_symlinks.stdout'
   tags:
   - dovecotplugins
 
@@ -77,7 +77,7 @@
       done
     done
   register: sieve_global_compile
-  changed_when: '{{ "CHANGED" in sieve_global_compile.stdout }}'
+  changed_when: '"CHANGED" in sieve_global_compile.stdout'
   tags:
   - sieve
   - sievec

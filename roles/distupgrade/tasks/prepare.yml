@@ -7,7 +7,7 @@
       echo CHANGEDCHANGED >&2
     }
   register: zfssnap
-  changed_when: '{{ "CHANGEDCHANGED" in zfssnap.stderr }}'
+  changed_when: '"CHANGEDCHANGED" in zfssnap.stderr'
 
 - name: enable debug shell
   service: name=debug-shell state=started enabled=yes

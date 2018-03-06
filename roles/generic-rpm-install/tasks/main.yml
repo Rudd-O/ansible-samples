@@ -116,7 +116,7 @@
       {% endif %}
   when: ansible_distribution in "Fedora Qubes"
   register: updaterepo
-  changed_when: "{{ 'REGEN' in updaterepo.stdout or 'RELINK' in updaterepo.stdout }}"
+  changed_when: "'REGEN' in updaterepo.stdout or 'RELINK' in updaterepo.stdout"
   tags:
   - generic_rpm_install
   - generic-rpm-install

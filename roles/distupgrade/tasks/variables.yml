@@ -15,7 +15,7 @@
       {% if ansible_check_mode|default(False) %}test -n "$created" && rm -f /.distupgrade || true{% endif %}
   register: distrovercontent
   check_mode: no
-  changed_when: '{{ "CHANGED" in distrovercontent.stderr }}'
+  changed_when: '"CHANGED" in distrovercontent.stderr'
 
 - name: record if there is a kernel package
   shell: rpm -qa | grep -q ^kernel && echo YES || echo NO

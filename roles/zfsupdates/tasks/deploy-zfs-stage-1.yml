@@ -27,7 +27,7 @@
       echo CHANGED
     fi
   register: insertmarker
-  changed_when: "{{ 'CHANGED' in insertmarker.stdout }}"
+  changed_when: "'CHANGED' in insertmarker.stdout"
   when: "ansible_distribution == 'Qubes'"
   tags:
   - yum
@@ -73,7 +73,7 @@
   shell: qubes-dom0-update -y {{ " ".join(zfs_packages) }}
   when: ansible_distribution == "Qubes"
   register: upgrade_zfs_dom0
-  changed_when: '{{ upgrade_zfs_dom0.stdout.find("Nothing to do.") == -1 }}'
+  changed_when: 'upgrade_zfs_dom0.stdout.find("Nothing to do.") == -1'
 
 - set_fact:
     upgrade_zfs_nondom0_check: '{{ upgrade_zfs_nondom0.changed|default(False) }}'
@@ -86,7 +86,7 @@
       systemctl preset "$a"
     done
   register: unitpresets
-  changed_when: '{{ "systemd" in unitpresets.stderr }}'
+  changed_when: '"systemd" in unitpresets.stderr'
 
 - name: test that GRUB ZFS fixer RPM is installed
   shell: rpm -q grub-zfs-fixer && echo YES || echo NO

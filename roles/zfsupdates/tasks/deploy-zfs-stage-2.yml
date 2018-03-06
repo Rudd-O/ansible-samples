@@ -9,7 +9,7 @@
         lsinitrd /boot/initramfs-$ver.img 2>/dev/null | grep -qq etc/crypttab >&2 || { touch /.zfsreinstallneeded ; echo NO ; }
       done
   register: all_ramdisks_have_zfs
-  changed_when: "{{ 'NO' in all_ramdisks_have_zfs.stdout }}"
+  changed_when: "'NO' in all_ramdisks_have_zfs.stdout"
   tags:
   - zfs
   - dkms
@@ -18,7 +18,7 @@
   shell: if test -f /.zfsreinstallneeded ; then echo YES ; else echo NO ; fi
   check_mode: no
   register: mustrecompile
-  changed_when: "{{ 'YES' in mustrecompile.stdout }}"
+  changed_when: "'YES' in mustrecompile.stdout"
   tags:
   - zfs
   - dkms
@@ -26,7 +26,7 @@
 - name: eliminate obsolete versions of DKMS SPL and ZFS
   shell: test -d /var/lib/dkms/{{ item }}/ || exit 0 ; cd /var/lib/dkms/{{ item }}/ && for f in */source ; do if [ ! -f "$f/dkms.conf" ] ; then rm -rf $(dirname "$f") ; echo ELIMINATED "$f" ; fi ; done
   register: deleted_obsolete
-  changed_when: '{{ "ELIMINATED" in deleted_obsolete.stdout }}'
+  changed_when: '"ELIMINATED" in deleted_obsolete.stdout'
   with_items:
   - spl
   - zfs
@@ -70,7 +70,7 @@
       done
   register: uninstall_old_spl_zfs
   when: mustrecompile.changed
-  changed_when: "{{ 'YES' in uninstall_old_spl_zfs.stdout }}"
+  changed_when: "'YES' in uninstall_old_spl_zfs.stdout"
   tags:
   - zfs
   - dkms
@@ -93,7 +93,7 @@
       done
   register: install_spl_zfs
   when: mustrecompile.changed
-  changed_when: "{{ 'YES' in install_spl_zfs.stdout }}"
+  changed_when: "'YES' in install_spl_zfs.stdout"
   tags:
   - zfs
   - dkms

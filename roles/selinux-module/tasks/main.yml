@@ -24,7 +24,7 @@
     {% endfor %}
   when: state|default("enabled") == "disabled"
   register: disablemod
-  changed_when: '{{ "DISABLED" in disablemod.stdout }}'
+  changed_when: '"DISABLED" in disablemod.stdout'
   check_mode: no
 
 - name: create local policy directory
