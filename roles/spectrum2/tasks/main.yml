@@ -1,5 +1,5 @@
 - name: install Spectrum2 IM
-  include_role:
+  import_role:
     name: generic-rpm-install
   vars:
     project: spectrum2

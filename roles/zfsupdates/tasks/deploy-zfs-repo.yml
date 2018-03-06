@@ -16,7 +16,7 @@
 
 - block:
   - name: Deploy ZFS repository using generic RPM install
-    include_role:
+    import_role:
       name: generic-rpm-install
     vars:
       project: zfsupdates

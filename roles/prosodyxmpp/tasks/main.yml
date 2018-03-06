@@ -3,7 +3,7 @@
   tags: package
 
 - name: install prosody modules from package
-  include_role:
+  import_role:
     name: generic-rpm-install
   vars:
     project: prosody-modules
