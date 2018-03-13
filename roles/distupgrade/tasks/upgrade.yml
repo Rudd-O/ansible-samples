@@ -6,7 +6,7 @@
   when: method|default(None) == "dnf-upgrade"
 
 - name: execute upgrade in distro-sync mode
-  shell: dnf distro-sync -y --releasever {{ targetdistrover|int }}
+  shell: dnf distro-sync -y --allowerasing --releasever {{ targetdistrover|int }}
   when: method|default(None) in "distro-sync"
 
 - block:

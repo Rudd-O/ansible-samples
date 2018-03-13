@@ -18,7 +18,7 @@
   changed_when: '"CHANGED" in distrovercontent.stderr'
 
 - name: record if there is a kernel package
-  shell: rpm -qa | grep -q ^kernel && echo YES || echo NO
+  shell: rpm -qa | grep -q '^kernel-[0123456789]' && echo YES || echo NO
   check_mode: no
   register: kernelpkgcontent
   changed_when: False
