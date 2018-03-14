@@ -50,6 +50,9 @@
             dkmsver=`ls --sort=time -d1 /usr/src/$module-* | head -1` ; dkmsver=${dkmsver#/usr/src/$module-}
             test -n "$dkmsver"
             out=`dkms status -m $module -k $ver -v $dkmsver`
+            echo "====== output of dkms status for kernel $ver =======" >&2
+            echo "$out" >&2
+            echo "====================================================" >&2
             if [ "$out" != "" ] ; then
               if [ $action == uninstall ] ; then
                 out=`dkms status -m $module -k $ver -v $dkmsver`
@@ -59,10 +62,14 @@
                 echo "$out" | grep -Eq ': (built|added)' || { echo $module is not built or added >&2 ; continue ; }
               fi
               out=`dkms $action --directive REMAKE_INITRD=no -m $module -k $ver -v $dkmsver 2>&1` || ret=$?
+              echo "====== output of dkms $action for kernel $ver ======" >&2
               echo "$out" >&2
+              echo "====================================================" >&2
               echo "$out" | grep -q "is not currently installed" && continue || true
+              echo "$out" | grep -q "original module was found for this module on this kernel" && continue || true
               echo "$out" | grep -q "is no instance of" && continue || true
               echo "$out" | grep -q "failed to remove.*No such file or directory" && continue || true
+              echo "$out" | grep -q "DKMS: uninstall completed" && { echo YES ; continue ; } || true
               if [ x$ret != x0 ] ; then echo "DKMS $action for $ver exited with return code $ret" >&2 ; exit $ret ; fi
               echo YES
             fi
