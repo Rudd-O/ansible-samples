@@ -82,7 +82,7 @@
 
 - name: ensure that ZFS unit files are active
   shell: |
-    for a in zfs-import-cache.service zfs-import-scan.service zfs-mount.service zfs-share.service zfs-zed.service zfs.target ; do
+    for a in zfs-import-cache.service zfs-import-scan.service zfs-mount.service zfs-share.service zfs-zed.service zfs.target zfs-import.target ; do
       systemctl preset "$a"
     done
   register: unitpresets
