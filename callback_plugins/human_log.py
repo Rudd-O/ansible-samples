@@ -133,6 +133,8 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
             res = OUTPUT_OMITTED
 
     if hasattr(res, "get"):
+        if "_ansible_ignore_errors" in res:
+            del res["_ansible_ignore_errors"]
         if "_ansible_no_log" in res:
             del res["_ansible_no_log"]
 
