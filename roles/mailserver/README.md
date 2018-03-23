@@ -12,7 +12,8 @@ including (but not limited to) the following features:
 
 Consult the *Setup* section below to configure your own mail server using this
 Ansible role.  Also consult the `defaults/main.yml` file to understand
-the variables that influence the role's behavior.
+the variables that influence the role's behavior.  The `main.yml` file mentioned
+before contains variables and documentation as to what the variables do.
 
 ## Operation
 
@@ -60,14 +61,16 @@ without greylisting, you can do so by adding rules to the files
 
 #### Automatic classification
 
-Spam classification happens upon delivery, where the command
-`bogofilter-dovecot-deliver` automatically runs unclassified mail through the
-`bogofilter` classifier, and then pipes the result through the Dovecot LDA.
-
-The LDA then runs the Sieve rules that inspect the headers (which contain the
-result of the spam classification) and, as the first order of business, uses
-the sieve rules deployed in `/var/lib/sieve/before.d` to classify the e-mails
-into the *SPAM* folder if they have been deemed to be spam.
+Spam classification happens upon delivery, where Dovecot's deliver agent
+automatically runs unclassified mail through the `spamclassifier` sieve
+(stored at `/var/lib/sieve/before.d/spamclassifier.sieve`) which in turn
+runs them through the `spamclassifier` filter (stored at
+`/usr/local/libexec/sieve/spamclassifier`).  The filter runs `bogofilter`
+with the appropriate options to detect the spamicity of the message.
+Once the filter is done and has added the spamicity headers to the
+incoming message, the `spamclassifier` sieve places the resulting
+message in the appropriate SPAM box, or continues processing other sieve
+scripts until the message ends in the appropriate mailbox (usually INBOX).
 
 Because the rule that classifies mail as spam executes before your own Sieve
 rules, all of your e-mail will go through the classifier.  This may mean that,
@@ -117,6 +120,12 @@ as root.  The events will appear in real-time, and if there is any problem
 with the reclassifier, an error will be logged.
 
 ## Setup
+
+### Variables setup
+
+Target your mail server with the Ansible variables mentioned in the
+`defaults/main.yml` file.  Customize these variables to your needs.
+See the file in question for documentation of the variables.
 
 ### DKIM
 
