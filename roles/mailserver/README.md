@@ -119,6 +119,16 @@ running `journalctl -fa` as the user who classifies the email, or
 as root.  The events will appear in real-time, and if there is any problem
 with the reclassifier, an error will be logged.
 
+By default, incoming mail will be classified as spam or ham, but their
+contents will not be registered as either in the `bogofilter` database.
+This prevents false positives and negatives.  If you wish to turn on
+automatic registration of incoming mail's contents as SPAM or ham, the
+role variable `spam.autoregister_incoming_mail` can be turned on (set to
+True), and then incoming mail will automatically be recorded as spam or
+ham based on the decisions that `bogofilter` makes at the time.  This can
+speed up the training process, but it can also cause `bogofilter` to
+incorrectly learn what is spam and what isn't.
+
 ## Setup
 
 ### Variables setup

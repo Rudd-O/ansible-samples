@@ -2,6 +2,7 @@
 mail:
   message_size_limit: '{{ 60 * 1024 * 1024 }}'
   mailbox_size_limit: '{{ 1024 * 1024 * 1024 }}'
+# The following variables are mandatory:
 #   hostname: mailserver.domain.com
 #   domain: domain.com
 #   origin: domain.com
