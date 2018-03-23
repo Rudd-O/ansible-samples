@@ -11,7 +11,7 @@ if [ "$ret" != "0" ] ; then
 fi
 tmp2=`mktemp`
 trap "rm -f $tmp $tmp2" EXIT
-bogofilter -p -e -u -l -C -I "$tmp" 2> "$tmp2"
+bogofilter -p -e {% if spam.autoregister_incoming_mail|default(False) %}-u {% endif %}-l -C -I "$tmp" 2> "$tmp2"
 ret=$?
 if [ "$ret" != "0" ] ; then
     output=`cat "$tmp2"`

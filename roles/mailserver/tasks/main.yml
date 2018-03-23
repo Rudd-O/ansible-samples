@@ -6,7 +6,7 @@
   - spf
   - dkim
 
-- include: postgrey.yml
+- import_tasks: postgrey.yml
   tags:
   - postgrey
 
@@ -14,28 +14,28 @@
     name: deploy-ssl-certs
   tags: ssl
 
-- include: spf.yml
+- import_tasks: spf.yml
   tags:
   - spf
 
-- include: dkim.yml
+- import_tasks: dkim.yml
   tags:
   - dkim
 
-- include: dovecot.yml
+- import_tasks: dovecot.yml
   tags:
   - dovecot
 
-- include: postfix.yml
+- import_tasks: postfix.yml
   tags:
   - postfix
 
-- include: accounts.yml
+- import_tasks: accounts.yml
   tags:
   - accounts
 
-- include: services.yml
+- import_tasks: services.yml
 
-- include: test.yml
+- import_tasks: test.yml
   tags:
   - test
