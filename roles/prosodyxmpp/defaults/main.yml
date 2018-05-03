@@ -53,7 +53,10 @@ xmpp:
   - smacks
   - smacks_offline
   - carbons
+  # XEP-0313: Message Archive Management.
   - mam
+  # XEP-0313: Message Archive Management (MUC).
+  - mam_muc
   - csi
   - filter_chatstates
   - throttle_presence
