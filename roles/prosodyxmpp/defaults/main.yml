@@ -59,6 +59,11 @@ xmpp:
   - throttle_presence
   - http_upload
   - cloud_notify
+  # omemo_all_access disables access control for all OMEMO PEP nodes
+  # (=all nodes in the namespace of `eu.siacs.conversations.axolotl.*`),
+  # giving everyone access to the OMEMO key material.
+  # See https://hg.prosody.im/prosody-modules/file/tip/mod_omemo_all_access/README.markdown
+  - omemo_all_access
   extra_modules: []
   logging:
     # Logging to /var/log/prosody/prosody.log can be info or debug.
