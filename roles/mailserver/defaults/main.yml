@@ -20,6 +20,9 @@ spam:
   # frequently by reclassifying mail into the SPAM box or other
   # mailboxes.
   autoregister_incoming_mail: False
+  # greylisting will cause incoming mail to be greylisted (temporarily
+  # rejected) if the sender / server has not been seen before.
+  greylisting: True
 
 # dkim:
 #   # You must list the private DKIM key of every domain you will be sending mail as

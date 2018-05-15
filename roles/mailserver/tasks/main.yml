@@ -10,7 +10,7 @@
   tags:
   - postgrey
 
-- include_role:
+- import_role:
     name: deploy-ssl-certs
   tags: ssl
 

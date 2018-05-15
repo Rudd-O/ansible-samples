@@ -47,6 +47,9 @@ you set up, traverses through this pipeline:
 
 ### Greylisting
 
+This section assumes that greylisting is activated (see `defaults/main.yml`
+for the right knob to turn it off).
+
 Your new mail server will reject any and all new e-mails from senders it hasn't
 seen for 60 seconds.  This is *normal*.  The sending servers will retry after a
 few minutes, after which the greylisting process will determine that the e-mail

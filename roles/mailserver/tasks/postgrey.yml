@@ -6,7 +6,7 @@
     state: enabled
   tags:
   - selinux
+  when: spam.greylisting
 
 - name: enable postgrey
-  service: name=postgrey enabled=yes state=started
-
+  service: name=postgrey enabled={{ spam.greylisting }} state={% if spam.greylisting %}started{% else %}stopped{% endif %}
