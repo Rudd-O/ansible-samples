@@ -34,6 +34,11 @@ Modules:
 
 See `README.md` files inside each directory, when they exist.
 
+Callback plugins:
+* [callback_plugins/human_log.py](callback_plugins/human_log.py) logs playbooks
+  in a YAML-ish colorized format.  *This plugin is unmaintained.*
+  *Please use the Ansible built-in* `yaml` *callback plugin*.
+
 Licensing
 ---------
 
