@@ -2,3 +2,7 @@
   shell: /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
   tags:
   - grub
+- name: set default to 0
+  shell: /usr/sbin/grub2-set-default 0
+  tags:
+  - grub
