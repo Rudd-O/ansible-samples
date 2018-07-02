@@ -34,7 +34,7 @@
   - zfs
   - olddkms
 
-- name: uninstall old SPL and ZFS
+- name: uninstall old ZFS
   shell: |
       set -ex
       vers=`(rpm -q kernel | sed s/kernel-// ; rpm -q kernel-devel | sed s/kernel-devel-//) | sort | uniq`
@@ -47,8 +47,8 @@
         rpm -q kernel-devel-$ver > /dev/null || { echo No kernel-devel $ver >&2 ; continue ; }
         for module in zfs spl ; do
           for action in uninstall remove ; do
-            dkmsver=`ls --sort=time -d1 /usr/src/$module-* | head -1` ; dkmsver=${dkmsver#/usr/src/$module-}
-            test -n "$dkmsver"
+            dkmsver=`(ls --sort=time -d1 /usr/src/$module-* || true) | head -1` ; dkmsver=${dkmsver#/usr/src/$module-}
+            test -n "$dkmsver" || continue
             out=`dkms status -m $module -k $ver -v $dkmsver`
             echo "====== output of dkms status for kernel $ver =======" >&2
             echo "$out" >&2
@@ -83,7 +83,7 @@
   - zfs
   - dkms
 
-- name: dkms install recently-installed SPL and ZFS
+- name: dkms install recently-installed ZFS
   shell: |
       set -ex
       vers=`rpm -q kernel-devel | sed s/kernel-devel-//`
@@ -91,7 +91,7 @@
       for ver in $vers ; do
         rpm -q kernel-$ver > /dev/null || rpm -q kernel-core-$ver > /dev/null || { echo No kernel $ver >&2 ; continue ; }
         rpm -q kernel-devel-$ver > /dev/null || { echo No kernel-devel $ver >&2 ; continue ; }
-        for module in spl zfs ; do
+        for module in zfs ; do
           echo Installing $module for kernel $ver >&2
           dkmsver=`ls --sort=time -d1 /usr/src/$module-* | head -1` ; dkmsver=${dkmsver#/usr/src/$module-}
           test -n "$dkmsver"
@@ -99,9 +99,9 @@
           echo YES
         done
       done
-  register: install_spl_zfs
+  register: install_zfs
   when: mustrecompile.changed
-  changed_when: "'YES' in install_spl_zfs.stdout"
+  changed_when: "'YES' in install_zfs.stdout"
   tags:
   - zfs
   - dkms

@@ -4,8 +4,6 @@ zfs_packages:
     - libzpool2
     - libnvpair1
     - libzfs2
-    - spl
     - zfs
-    - spl-dkms
     - zfs-dkms
     - zfs-dracut
