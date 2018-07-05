@@ -45,9 +45,15 @@
     deployzfs_stage: two
   when: '"YES" in zfstest.stdout'
 
+- name: is this Qubes template VM
+  shell: test -f /run/qubes/this-is-templatevm && echo YES || echo NO
+  changed_when: False
+  check_mode: no
+  register: templatevm
+
 - name: clean downloaded yum packages
   shell: test -f /usr/bin/dnf && { dnf clean packages ; } || { yum clean packages ; }
-  when: ansible_distribution in "Fedora" and inventory_hostname in groups["qubes-managed-templates"]|default([]) and (do_updates_dnf.changed|default(False))
+  when: ansible_distribution in "Fedora" and "YES" in templatevm.stdout and (do_updates_dnf.changed|default(False))
   register: clean_updates
   changed_when: "'0 packages removed' not in clean_updates.stdout"
 
