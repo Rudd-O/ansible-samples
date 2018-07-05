@@ -1,7 +1,7 @@
-# Perform a distribution upgrade on your Fedora system
+# Perform a distribution upgrade on your Fedora / Debian system
 
-This Ansible playbook safely upgrades your Fedora system to the next
-distribution release.  Here are a few noteworthy points:
+This Ansible playbook safely upgrades your Fedora or Debian system
+to the next distribution release.  Here are a few noteworthy points:
 
 * Your root ZFS dataset will be snapshotted prior to the upgrade,
   if your system has ZFS on root.
@@ -18,5 +18,8 @@ Usage:
 
 Every time you want to upgrade your distribution, run the playbook `distupgrade` against it.
 Your task must set `become: yes` for this to be effective.
+
+You can run this against Qubes templates as well.  Use the
+[https://github.com/Rudd-O/ansible-qubes](Ansible Qubes] toolkit to do so.
 
 That's all!
