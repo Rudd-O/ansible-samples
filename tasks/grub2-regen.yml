@@ -1,8 +1,8 @@
 - name: regenerate GRUB configuration
-  shell: /usr/sbin/grub2-mkconfig -o /boot/grub2/grub.cfg
+  shell: /usr/sbin/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-mkconfig -o /boot/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}/grub.cfg
   tags:
   - grub
 - name: set default to 0
-  shell: /usr/sbin/grub2-set-default 0
+  shell: /usr/sbin/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-set-default 0
   tags:
   - grub

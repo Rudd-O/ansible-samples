@@ -9,6 +9,24 @@
   shell: dnf distro-sync -y --allowerasing --releasever {{ targetdistrover|int }}
   when: method|default(None) in "distro-sync"
 
+- name: execute upgrade in dist-upgrade mode
+  shell: |
+    set -e
+    {% set targetcodename = debian_distro_map[targetdistrover|int] %}
+    {% for num, codename in debian_distro_map.items() %}
+    {%   if distrover|int == num|int %}
+    for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list ; do
+      test -f "$f" || continue
+      if grep -q {{ codename }} "$f" ; then
+        sed -i 's/{{ codename }}/{{ targetcodename }}/g' "$f"
+      fi
+    done
+    {%   endif %}
+    {% endfor %}
+    apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confold" --force-yes -fuy dist-upgrade
+  when: method|default(None) in "dist-upgrade"
+
 - block:
   - name: update initial packages in qubes-dom0-update mode
     shell: qubes-dom0-update -y {{ base_packages }} --releasever {{ targetdistrover|int }}

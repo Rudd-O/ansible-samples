@@ -5,7 +5,7 @@
       if ! test -f /.distupgrade ; then
         created=true
         echo CHANGED >> /dev/stderr
-        echo {{ ansible_distribution_version }} > /.distupgrade
+        echo {{ ansible_distribution_version|int }} > /.distupgrade
         echo {{ ansible_distribution_version|int + 1 }} >> /.distupgrade
         {% if ansible_check_mode|default(False) %}selinuxenabled && touch /.autorelabel || true{% endif %}
 
@@ -18,7 +18,12 @@
   changed_when: '"CHANGED" in distrovercontent.stderr'
 
 - name: record if there is a kernel package
-  shell: rpm -qa | grep -q '^kernel-[0123456789]' && echo YES || echo NO
+  shell: |
+    {% if ansible_distribution in "Fedora Qubes" %}
+    rpm -qa | grep -q '^kernel-[0123456789]' && echo YES || echo NO
+    {% elif ansible_distribution in "Debian Ubuntu" %}
+    dpkg -l | grep -q linux-kernel && echo YES || echo NO
+    {% endif %}
   check_mode: no
   register: kernelpkgcontent
   changed_when: False
@@ -32,7 +37,8 @@
 
 - name: decide whether to manage debug shell
   set_fact:
-    debug_shell: '{% if distrover|int >= 23 %}yes{% else %}no{% endif %}'
+    debug_shell: '{% if (ansible_distribution in "Fedora" and distrover|int >= 23)
+                        or (ansible_distribution in "Debian Ubuntu") %}yes{% else %}no{% endif %}'
 
 - name: set method to dnf-upgrade
   set_fact:
@@ -53,3 +59,13 @@
   set_fact:
     method: qubes-dom0-update
   when: method is not defined and ansible_distribution in "Qubes"
+
+- name: set method to apt-get dist-upgrade
+  set_fact:
+    method: dist-upgrade
+    debian_distro_map:
+      7: wheezy
+      8: jessie
+      9: stretch
+      10: buster
+  when: method is not defined and ansible_distribution in "Debian Ubuntu"

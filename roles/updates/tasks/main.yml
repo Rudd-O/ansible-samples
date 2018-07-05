@@ -58,9 +58,9 @@
   changed_when: "'0 packages removed' not in clean_updates.stdout"
 
 - name: detect grub
-  shell: test -f /usr/sbin/grub2-mkconfig && { echo TWO ; exit ; } || test -f /usr/sbin/grubby -a -f /boot/grub/grub.conf && { echo ONE ; } || true
+  shell: test -f /usr/sbin/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-mkconfig && { echo TWO ; exit ; } || test -f /usr/sbin/grubby -a -f /boot/grub/grub.conf && { echo ONE ; } || true
   register: grub
-  when: ansible_distribution in "Fedora Qubes" and ("kernel" in "".join((do_updates_dnf.results|default([]) + do_updates_dom0.stdout_lines|default([]))) or "xen" in "".join((do_updates_dnf.results|default([]) + do_updates_dom0.stdout_lines|default([]))) )
+  when: ansible_distribution in "Fedora Qubes Debian Ubuntu" and ("linux-" in "".join((do_updates_apt.results|default([]))) or "kernel" in "".join((do_updates_dnf.results|default([]) + do_updates_dom0.stdout_lines|default([]))) or "xen" in "".join((do_updates_dnf.results|default([]) + do_updates_dom0.stdout_lines|default([]))) )
   check_mode: no
   changed_when: False
   tags:
