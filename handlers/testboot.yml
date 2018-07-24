@@ -1,2 +1,6 @@
 - name: unmount boot
-  shell: umount /boot && sync
+  shell: |
+    for mntpnt in /boot/efi /boot ; do
+      umount $mntpnt
+      sync
+    done

@@ -1,24 +1,26 @@
 ---
 - name: test that boot is mounted, abort otherwise
   shell: |
-      if grep -q /boot /etc/fstab
+    for mntpnt in /boot /boot/efi ; do
+      if grep -q $mntpnt /etc/fstab
       then
-        if ! mountpoint /boot
+        if ! mountpoint $mntpnt
         then
-          mount /boot
+          mount $mntpnt
           sleep 1
-          mountpoint /boot || {
+          mountpoint $mntpnt || {
             # Oh shit the mount unit is actually associated with a device unit
             # whose /sys path is obsolete.  Tell systemd to reload the units.
             systemctl --system daemon-reload
-            mount /boot
-            mountpoint /boot || exit 4
+            mount $mntpnt
+            mountpoint $mntpnt || exit 4
           }
           echo CHANGED
         fi
       else
         true
       fi
+    done
   register: testboot
   changed_when: testboot.stdout.find("CHANGED") != -1
   notify: unmount boot
