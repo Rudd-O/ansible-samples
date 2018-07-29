@@ -2,7 +2,9 @@
   - name: regenerate GRUB configuration
     shell: |
       set -e
-      for f in /boot/efi/EFI/{{ ansible_distribution|lower }}/grub.cfg /boot/grub/grub.cfg /boot/grub2/grub.cfg ; do test -f "$f" && break ; done
+      for f in /etc/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-efi.cfg /etc/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}.cfg ; do test -f "$f" && break || true ; done
+      test -f "$f"
+      echo cfgfile="$f"
       /usr/sbin/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-mkconfig -o "$f"
       /usr/sbin/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-set-default 0
   tags:
