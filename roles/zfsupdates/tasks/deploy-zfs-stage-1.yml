@@ -37,7 +37,7 @@
   blockinfile:
     dest: "{{ pkgconffile.stdout }}"
     marker: "### ANSIBLE {mark} ###"
-    content: "installonlypkgs=kernel, kernel-modules, kernel-modules-extra, kernel-core, kernel-devel, kernel-qubes-vm"
+    content: "installonlypkgs=kernel, kernel-modules, kernel-modules-extra, kernel-core, kernel-devel, kernel-qubes-vm, kernel-latest"
   when: "ansible_distribution == 'Qubes'"
   tags:
   - yum

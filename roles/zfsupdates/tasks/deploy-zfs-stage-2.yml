@@ -1,7 +1,17 @@
+- name: obtain kernel versions
+  shell: '(rpm -q kernel-devel kernel-latest-devel || true) | sed s/kernel-devel-// | sed s/kernel-latest-devel-//'
+  register: kernelversuncooked
+  check_mode: no
+  changed_when: false
+
+- name: set kernel versions fact
+  set_fact:
+    kernelvers: '{{ kernelversuncooked.stdout_lines }}'
+
 - name: make sure that all ramdisks have ZFS
   shell: |
       set -e
-      vers=`rpm -q kernel-devel | sed s/kernel-devel-//`
+      vers={{ kernelvers|join(" ")|quote }}
       for ver in $vers ; do
         if [ "$ver" == "3.18.17-6.pvops.qubes.x86_64" ] ; then continue ; fi
         rpm -q kernel-$ver > /dev/null 2>&1 || rpm -q kernel-core-$ver > /dev/null 2>&1 || continue
@@ -37,14 +47,18 @@
 - name: uninstall old ZFS
   shell: |
       set -ex
-      vers=`(rpm -q kernel | sed s/kernel-// ; rpm -q kernel-devel | sed s/kernel-devel-//) | sort | uniq`
+      vers={{ kernelvers|join(" ")|quote }}
       ret=0
       for ver in $vers ; do
         # we only uninstall kernel modules from kernels who still can have modules rebuilt
         # kernels that do not have the main or the devel packages cannot be rebuilt
         # so we skip them
-        rpm -q kernel-$ver > /dev/null || rpm -q kernel-core-$ver > /dev/null || { echo No kernel $ver >&2 ; continue ; }
-        rpm -q kernel-devel-$ver > /dev/null || { echo No kernel-devel $ver >&2 ; continue ; }
+        if rpm -q kernel-$ver > /dev/null || rpm -q kernel-core-$ver > /dev/null || rpm -q kernel-latest-$ver > /dev/null ; then
+          true
+        else
+          echo No kernel $ver >&2
+          continue
+        fi
         for module in zfs spl ; do
           for action in uninstall remove ; do
             dkmsver=`(ls --sort=time -d1 /usr/src/$module-* || true) | head -1` ; dkmsver=${dkmsver#/usr/src/$module-}
@@ -86,11 +100,15 @@
 - name: dkms install recently-installed ZFS
   shell: |
       set -ex
-      vers=`rpm -q kernel-devel | sed s/kernel-devel-//`
+      vers={{ kernelvers|join(" ")|quote }}
       ret=0
       for ver in $vers ; do
-        rpm -q kernel-$ver > /dev/null || rpm -q kernel-core-$ver > /dev/null || { echo No kernel $ver >&2 ; continue ; }
-        rpm -q kernel-devel-$ver > /dev/null || { echo No kernel-devel $ver >&2 ; continue ; }
+        if rpm -q kernel-$ver > /dev/null || rpm -q kernel-core-$ver > /dev/null || rpm -q kernel-latest-$ver > /dev/null ; then
+          true
+        else
+          echo No kernel $ver >&2
+          continue
+        fi
         for module in zfs ; do
           echo Installing $module for kernel $ver >&2
           dkmsver=`ls --sort=time -d1 /usr/src/$module-* | head -1` ; dkmsver=${dkmsver#/usr/src/$module-}
@@ -114,9 +132,13 @@
 - name: sanity-check initramfs
   shell: |
       set -e
-      vers=`rpm -q kernel-devel | sed s/kernel-devel-//`
+      vers={{ kernelvers|join(" ")|quote }}
       for ver in $vers ; do
-        rpm -q kernel-$ver > /dev/null 2>&1 || rpm -q kernel-core-$ver > /dev/null 2>&1 || continue
+        if rpm -q kernel-$ver > /dev/null || rpm -q kernel-core-$ver > /dev/null || rpm -q kernel-latest-$ver > /dev/null ; then
+          true
+        else
+          continue
+        fi
         lsinitrd /boot/initramfs-$ver.img 2>/dev/null | grep zfs.ko >&2 || { echo "kernel-$ver initramfs does not contain zfs.ko" >&2 ; exit 1 ; }
         lsinitrd /boot/initramfs-$ver.img 2>/dev/null | grep etc/crypttab >&2 || { echo "kernel-$ver initramfs does not contain crypttab" >&2 ; exit 1 ; }
       done
