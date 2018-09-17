@@ -55,13 +55,14 @@
     - zlib-devel
     - make
     - ksh
+    - elfutils-libelf-devel
   register: can_build
   when: "ansible_distribution == 'Qubes'"
   changed_when: False
   check_mode: no
 
 - name: install build dependencies in dom0
-  shell: qubes-dom0-update -y git automake rpm-build libtool libuuid-devel libblkid-devel zlib-devel make ksh
+  shell: qubes-dom0-update -y git automake rpm-build libtool libuuid-devel libblkid-devel zlib-devel make ksh elfutils-libelf-devel
   when: "ansible_distribution == 'Qubes' and 'NO' in can_build.stdout"
 
 - name: upgrade ZFS RPMs (Fedora)
