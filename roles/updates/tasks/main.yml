@@ -57,20 +57,17 @@
   register: clean_updates
   changed_when: "'0 packages removed' not in clean_updates.stdout"
 
-- name: detect grub
-  shell: test -f /usr/sbin/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-mkconfig && { echo TWO ; exit ; } || test -f /usr/sbin/grubby -a -f /boot/grub/grub.conf && { echo ONE ; } || true
-  register: grub
-  when: ansible_distribution in "Fedora Qubes Debian Ubuntu" and ("linux-" in "".join((do_updates_apt.results|default([]))) or "kernel" in "".join((do_updates_dnf.results|default([]) + do_updates_dom0.stdout_lines|default([]))) or "xen" in "".join((do_updates_dnf.results|default([]) + do_updates_dom0.stdout_lines|default([]))) )
-  check_mode: no
-  changed_when: False
+- set_fact:
+    update_results: '{{ ((do_updates_apt|default({"results": []})).results|default([])
+                       + (do_updates_dnf|default({"results": []})).results|default([])
+                       + (do_updates_dom0|default({"stdout_lines": []})).stdout_lines|default([]))|join("\n") }}'
   tags:
   - grub
 
-- include: grub2-regen.yml
-  when: '"TWO" in grub.stdout|default("")'
-
-- name: set GRUB1 default
-  shell: /usr/sbin/grubby --set-default-index=0
-  when: '"ONE" in grub.stdout|default("")'
+- block:
+  - include: grub2-regen.yml
+  - name: set GRUB default to first boot menu entry
+    shell: /usr/sbin/grubby --set-default-index=0
+  when: ansible_distribution in "Fedora Qubes Debian Ubuntu" and ("linux-" in update_results or "kernel" in update_results or "xen" in update_results)
   tags:
   - grub
