@@ -61,13 +61,12 @@
     update_results: '{{ ((do_updates_apt|default({"results": []})).results|default([])
                        + (do_updates_dnf|default({"results": []})).results|default([])
                        + (do_updates_dom0|default({"stdout_lines": []})).stdout_lines|default([]))|join("\n") }}'
+    grub_set_default_zero: yes
   tags:
   - grub
 
 - block:
   - include: grub2-regen.yml
-  - name: set GRUB default to first boot menu entry
-    shell: /usr/sbin/grubby --set-default-index=0
   when: ansible_distribution in "Fedora Qubes Debian Ubuntu" and ("linux-" in update_results or "kernel" in update_results or "xen" in update_results)
   tags:
   - grub

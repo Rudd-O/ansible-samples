@@ -30,9 +30,14 @@
         grub_version: '{{ _grub.stdout_lines[0] }}'
         grub_menu_lst: '{{ _grub.stdout_lines[1] }}'
         grub_mkconfig: '{{ _grub.stdout_lines[2] }}'
+        grub_set_default: '/usr/sbin/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-set-default'
       check_mode: no
 
     - name: regenerate GRUB configuration
       shell: '{{ grub_mkconfig }} -o {{ grub_menu_lst }}'
+
+    - name: set GRUB default to first boot meny entry
+      shell: '/usr/sbin/grubby --set-default-index=0 || {{ grub_set_default }} 0'
+      when: grub_set_default_zero|default(False)
   tags:
   - grub
