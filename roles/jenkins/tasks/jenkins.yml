@@ -31,7 +31,7 @@
     jenkins.model.DownloadSettings.xml: '0644'
     jenkins.security.QueueItemAuthenticatorConfiguration.xml: '0644'
     jenkins.security.UpdateSiteWarningsConfiguration.xml: '0644'
-    org.jenkinsci.plugins.pipeline.modeldefinition.config.GlobalConfig: '0644'
+    org.jenkinsci.plugins.pipeline.modeldefinition.config.GlobalConfig.xml: '0644'
   tags:
   - scriptApproval
   - sharedLibraries

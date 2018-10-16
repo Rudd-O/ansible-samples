@@ -6,7 +6,7 @@
              'pendingClasspathEntries'] %}
 {%-   if n in jenkins.scriptApproval|default([]) %}
   <{{ n }}>
-{%-     for x in jenkins.scriptApproval['n'] %}
+{%-     for x in jenkins.scriptApproval[n] %}
     <string>{{ x }}</string>
 {%-     endfor %}
   </{{ n }}>
