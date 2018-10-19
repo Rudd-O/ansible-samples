@@ -16,7 +16,7 @@
       </retriever>
       <implicit>false</implicit>
       <allowVersionOverride>true</allowVersionOverride>
-      <includeInChangesets>true</includeInChangesets>
+      <includeInChangesets>false</includeInChangesets>
     </org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
 {%-   endfor %}
   </libraries>
