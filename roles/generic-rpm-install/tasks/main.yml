@@ -129,8 +129,17 @@
   - generic-rpm-install
   register: generic_rpm_install
 
+- name: install package
+  package: pkg={{ item }} state=latest
+  with_items: '{{ packages }}'
+  when: ansible_distribution in "Fedora Qubes" and packages is defined
+  tags:
+  - generic_rpm_install
+  - generic-rpm-install
+  register: generic_rpm_installs
+
 - set_fact:
-    '{{ register_var|default("generic_rpm_install") }}': '{{ generic_rpm_install }}'
+    '{{ register_var|default("generic_rpm_install") }}': '{{ generic_rpm_install.skipped|ternary(generic_rpm_installs, generic_rpm_install) }}'
   when: ansible_distribution in "Fedora Qubes" and register_var is defined
   tags:
   - generic_rpm_install
