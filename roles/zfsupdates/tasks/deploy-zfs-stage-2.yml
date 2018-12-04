@@ -1,5 +1,5 @@
 - name: obtain kernel versions
-  shell: '(rpm -q kernel-devel kernel-latest-devel || true) | sed s/kernel-devel-// | sed s/kernel-latest-devel-//'
+  shell: '(rpm -q kernel-devel kernel-latest-devel | grep -v "is not installed" || true) | sed s/kernel-devel-// | sed s/kernel-latest-devel-//'
   register: kernelversuncooked
   check_mode: no
   changed_when: false
