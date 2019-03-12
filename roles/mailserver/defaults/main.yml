@@ -23,6 +23,10 @@ spam:
   # greylisting will cause incoming mail to be greylisted (temporarily
   # rejected) if the sender / server has not been seen before.
   greylisting: True
+  # spam_filing_after_user_scripts, if true, will cause the spam filing
+  # behavior (file mail into SPAM if if it is detected to be spam)
+  # to occur after the user sieve scripts have executed.
+  filing_after_user_scripts: False
 
 # dkim:
 #   # You must list the private DKIM key of every domain you will be sending mail as

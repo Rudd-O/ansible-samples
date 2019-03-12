@@ -1,10 +1,25 @@
 #!/bin/bash
 
 export PATH=/usr/sbin:/usr/bin:/sbin:/bin
-logger -p user.info -t bogofilter "Marking message as {{ item }}."
-output=$(bogofilter -e {% if item == "ham" %}-Sn{% else %}-Ns{% endif %} -M -C 2>&1)
+tmp=`mktemp`
+trap "rm -f $tmp" EXIT
+ret=0
+cat > "$tmp" || ret=$?
+if [ "$ret" != "0" ] ; then
+    logger -p user.error -t bogofilter "Error buffering message to mark as {{ item }}: exited with status $ret"
+    exit "$ret"
+fi
+
+mid=$(grep ^Message-ID: < "$tmp" | head -1 | cut -d '<' -f 2 | cut -d '>' -f 1)
+if [ "$mid" == "" ] ; then mid="with no discernible ID" ; fi
+logger --id=$$ -p user.info -t bogofilter "Marking message $mid as {{ item }}."
+
+tmp2=`mktemp`
+trap "rm -f $tmp $tmp2" EXIT
+bogofilter -e {% if item == "ham" %}-Sn{% else %}-Ns{% endif %} -M -C -I "$tmp" 2> "$tmp2"
 ret=$?
 if [ "$ret" != "0" ] ; then
-    logger -p user.error -t bogofilter "Error marking message as {{ item }}: $output"
+    output=`cat "$tmp2"`
+    logger --id=$$ -p user.error -t bogofilter "Error marking message $mid as {{ item }}: exited with status $ret, output: $output"
     exit "$ret"
 fi

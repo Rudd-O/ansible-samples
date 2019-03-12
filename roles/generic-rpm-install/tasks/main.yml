@@ -16,7 +16,7 @@
 
         metadata_expire=30
 
-      dest: /etc/yum.{% if ansible_distribution in "Qubes" %}real.{% endif %}repos.d/{{ generic_rpm_install.dnf_repo_name }}.repo
+      dest: /etc/yum.repos.d/{{ generic_rpm_install.dnf_repo_name }}.repo
       mode: 0644
       owner: root
       group: root
@@ -24,7 +24,7 @@
     register: repofile
 
   - name: delete old repo file
-    file: name=/etc/yum.{% if ansible_distribution in "Qubes" %}real.{% endif %}repos.d/{{ project }}.repo state=absent
+    file: name=/etc/yum.repos.d/{{ project }}.repo state=absent
 
   - set_fact:
       packages: '{{ [package] }}'

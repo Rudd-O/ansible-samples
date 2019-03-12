@@ -52,6 +52,21 @@
   register: sieve_global
   tags: sieve
 
+- name: deploy dovecot spam classifier script
+  template:
+    src: templates/dovecot/var/lib/sieve/{{ item }}/spamclassifier.sieve.j2
+    dest: /var/lib/sieve/{{ item }}/spamclassifier.sieve
+    owner: root
+    group: root
+    mode: 0644
+    setype: dovecot_etc_t
+    seuser: system_u
+  with_items:
+  - before.d
+  - after.d
+  register: sieve_global_spamclassifier
+  tags: sieve
+
 - name: compile dovecot global scripts
   shell: |
     set -e
