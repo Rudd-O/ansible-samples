@@ -4,8 +4,9 @@
   shell: |
       set -ex
       cd /boot
-      for initramfs in initramfs-*.img initramfs-*.img.knowngood ; do
-          if [ ! -f "$initramfs" ] ; then break ; fi
+      for initramfs in initramfs-*.img initramfs-*.img.knowngood /lib/modules/* ; do
+          if [ ! -e "$initramfs" ] ; then continue ; fi
+          initramfs=$(basename "$initramfs")
           vmlinuz=vmlinuz-${initramfs#initramfs-}
           vmlinuz=${vmlinuz%.knowngood}
           vmlinuz=${vmlinuz%.img}
