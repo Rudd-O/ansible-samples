@@ -22,3 +22,4 @@
   set_fact:
     package_install: '{{ normal_package_install|default(None) }}'
   when: ansible_distribution != "Qubes"
+  check_mode: no

@@ -40,7 +40,7 @@
   - name: install system upgrade plugin
     package: name=dnf-plugin-system-upgrade state=present
   - name: execute upgrade in system-upgrade mode
-    shell: dnf system-upgrade download -y --releasever {{ targetdistrover|int }}
+    shell: dnf system-upgrade download -y --allowerasing --best --releasever {{ targetdistrover|int }}
   - include: reboot.yml
     vars:
       reboot_command: dnf system-upgrade reboot
