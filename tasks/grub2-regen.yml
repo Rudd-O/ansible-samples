@@ -39,5 +39,6 @@
     - name: set GRUB default to first boot meny entry
       shell: '/usr/sbin/grubby --set-default-index=0 || {{ grub_set_default }} 0'
       when: grub_set_default_zero|default(False)
+  when: qubes is not defined or qubes.vm_type is not defined
   tags:
   - grub
