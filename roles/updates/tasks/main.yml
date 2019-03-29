@@ -21,11 +21,15 @@
   package: state=latest name=* enablerepo='qubes-vm-*-security-testing'
   when: ansible_distribution in "Fedora"
   register: do_updates_dnf
+  notify:
+  - recalc services that need to be restarted
 
 - name: update apt packages
   apt: upgrade=yes
   when: ansible_distribution in ("Debian", "Ubuntu")
   register: do_updates_apt
+  notify:
+  - recalc services that need to be restarted
 
 - name: update yum packages for qubes dom0s
   shell: qubes-dom0-update -y --enablerepo=qubes-dom0-security-testing
@@ -33,6 +37,8 @@
   register: do_updates_dom0
   failed_when: do_updates_dom0.rc != 0
   changed_when: '"Running transaction" in do_updates_dom0.stdout'
+  notify:
+  - recalc services that need to be restarted
 
 - name: redo akmods
   shell: if test -f /usr/sbin/akmods ; then akmods --force ; fi
