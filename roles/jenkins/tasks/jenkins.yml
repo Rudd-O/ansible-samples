@@ -1,16 +1,13 @@
 ---
 
-- name: upload jenkins repo file
-  copy: src=files/etc/yum.repos.d/jenkins.repo dest=/etc/yum.repos.d/jenkins.repo
-- name: upload jenkins key file
-  copy: src=files/etc/pki/rpm-gpg/jenkins-ci.org.key dest=/etc/pki/rpm-gpg/jenkins-ci.org.key
+- name: delete jenkins repo file
+  file: name=/etc/yum.repos.d/jenkins.repo state=absent
 
-- include: gnupg.yml
-- name: install jenkins key file
-  rpm_key: key=/etc/pki/rpm-gpg/jenkins-ci.org.key state=present
+- name: delete jenkins key file
+  file: name=/etc/pki/rpm-gpg/jenkins-ci.org.key state=absent
 
 - name: install jenkins
-  package: name=fontconfig,dejavu-sans-fonts,java-openjdk-headless,jenkins state=present
+  package: name=jenkins state=present
 
 - name: copy jenkins configs
   template:
