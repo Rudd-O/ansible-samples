@@ -1,44 +1,24 @@
-- block:
-    - name: Detect GRUB version
-      shell: |
+- name: regenerate GRUB configuration
+  shell: |
         if [ -f /usr/sbin/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-mkconfig ] ; then
           if [ -f /etc/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-efi.cfg ] ; then
-            echo 2
-            echo /etc/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-efi.cfg
-            echo /usr/sbin/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-mkconfig
-            exit
+            GRUB_VERSION=2
+            GRUB_MENU_LST=/etc/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-efi.cfg
+            GRUB_MKCONFIG=/usr/sbin/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-mkconfig
+          elif [ -f /etc/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}.cfg ] ; then
+            GRUB_VERSION=2
+            GRUB_MENU_LST=/etc/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}.cfg
+            GRUB_MKCONFIG=/usr/sbin/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-mkconfig
           fi
-          if [ -f /etc/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}.cfg ] ; then
-            echo 2
-            echo /etc/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}.cfg
-            echo /usr/sbin/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-mkconfig
-            exit
-          fi
+        elif [ -f /usr/sbin/grubby -a -f /boot/grub/grub.conf ] ; then
+          GRUB_VERSION=1
+          GRUB_MENU_LST=/boot/grub/grub.conf
+          GRUB_MKCONFIG/bin/true
         fi
-        if [ -f /usr/sbin/grubby -a -f /boot/grub/grub.conf ] ; then
-          echo 1
-          echo /boot/grub/grub.conf
-          echo /bin/true
-          exit
-        fi
-      register: _grub
-      check_mode: no
-      changed_when: False
-
-    - name: set GRUB variables
-      set_fact:
-        grub_version: '{{ _grub.stdout_lines[0] }}'
-        grub_menu_lst: '{{ _grub.stdout_lines[1] }}'
-        grub_mkconfig: '{{ _grub.stdout_lines[2] }}'
-        grub_set_default: '/usr/sbin/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-set-default'
-      check_mode: no
-
-    - name: regenerate GRUB configuration
-      shell: '{{ grub_mkconfig }} -o {{ grub_menu_lst }}'
-
-    - name: set GRUB default to first boot meny entry
-      shell: '/usr/sbin/grubby --set-default-index=0 || {{ grub_set_default }} 0'
-      when: grub_set_default_zero|default(False)
+        {% if ansible_check_mode %}echo {% endif %}GRUB_SET_DEFAULT=/usr/sbin/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-set-default
+        {% if ansible_check_mode %}echo {% endif %}$GRUB_MKCONFIG -o $GRUB_MENU_LST || exit $?
+        {% if ansible_check_mode %}echo {% endif %}/usr/sbin/grubby --set-default-index=0 || $GRUB_SET_DEFAULT 0
+  check_mode: no
   when: qubes is not defined or qubes.vm_type is not defined
   tags:
   - grub
