@@ -3,12 +3,7 @@
 # Copied to generic-build-job/handlers/main.yml
 
 - name: reload jenkins
-  uri:
-    url: '{{ jenkins.url }}/reload'
-    method: POST
-    status_code: 302
-  register: reload_jenkins
-  changed_when: 'reload_jenkins.status|default(None)|string == 302|string'
+  import_tasks: reload.yml
 
 - name: restart jenkins
   shell: service jenkins restart

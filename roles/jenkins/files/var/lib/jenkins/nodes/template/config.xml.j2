@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<slave>
+  <name>{{ item.key|je }}</name>
+  <description>To effectively build and test certain projects remotely</description>
+  <remoteFS>{{ item.value.workspace|default("./jenkins") }}</remoteFS>
+  <numExecutors>{{ item.value.executors|default(8) }}</numExecutors>
+  <mode>EXCLUSIVE</mode>
+{% if item.value.retention_strategy == 'demand' %}
+  <retentionStrategy class="hudson.slaves.RetentionStrategy$Demand">
+    <inDemandDelay>{{ item.value.in_demand_delay }}</inDemandDelay>
+    <idleDelay>{{ item.value.idle_delay }}</idleDelay>
+  </retentionStrategy>
+{% else %}
+  <retentionStrategy class="hudson.slaves.RetentionStrategy$Always"/>
+{% endif %}
+  <launcher class="hudson.slaves.CommandLauncher">
+    <agentCommand>{{ agentCommand|je }}</agentCommand>
+  </launcher>
+  <label>{{ item.value.label }}</label>
+  <nodeProperties/>
+</slave>

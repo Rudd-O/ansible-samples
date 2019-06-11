@@ -1,0 +1,84 @@
+#!/bin/bash
+
+set -e
+
+test -n "$2" || {
+    echo 'error: node name was not specified on the command line' >&2
+    exit 64
+}
+test -n "$WORKSPACE" || {
+    echo 'error: $WORKSPACE is not defined' >&2
+    exit 64
+}
+
+JENKINS_URL="$1"
+NODENAME="$2"
+test -n "$NODENAME" || {
+    echo 'error: node name was not supplied' >&2
+    exit 64
+}
+
+slavejar=
+cleanup() {
+    if [ -n "$slavejar" -a -e "$slavejar" ] ; then rm -f "$slavejar" ; fi
+}
+trap cleanup EXIT
+
+ssh "$NODENAME" bash >&2 << EOF
+    set -e
+    retry() {
+      local tries=\$1
+      shift
+      local timeout=\$1
+      shift
+      local cmd=\$1
+      shift
+      local ret=
+      while [ "\$ret" != "0" ] ; do 
+        "\$cmd" "\$@" && ret=0 || ret=\$?
+        tries=\$(( \$tries - 1 ))
+        if [ "\$tries" == "0" ] ; then break ; fi
+        if [ "\$ret" != "0" ] ; then echo sleeping until retry >&2 ; sleep "\$timeout" ; fi
+      done
+      return "\$ret"
+    }
+    command -v java > /dev/null || {
+        echo "Installing Java"
+        command -v dnf && {
+          sudo dnf install -qy java-openjdk-headless
+        } || {
+          if test -f /tmp/apt-updated ; then true ; else
+            retry 30 15 sudo apt-get update
+            touch /tmp/apt-updated
+          fi
+          retry 30 15 sudo apt-get install -y openjdk-8-jre-headless
+        }
+    }
+    command -v git > /dev/null || {
+        echo "Installing Git"
+        command -v dnf && {
+          sudo dnf install -qy git
+        } || {
+          if test -f /tmp/apt-updated ; then true ; else
+            retry 30 15 sudo apt-get update
+            touch /tmp/apt-updated
+          fi
+          retry 30 15 sudo apt-get install -y git
+        }
+    }
+    if [ ! -d "$WORKSPACE" ] ; then
+        echo "Making workspace $WORKSPACE"
+        mkdir -p .workspacetest
+        sudo mv -f .workspacetest "$WORKSPACE"
+    fi
+EOF
+
+if [ -n "$JENKINS_URL" ] ; then
+    slavejar=`mktemp`
+    curl -s "$JENKINS_URL"/jnlpJars/slave.jar </dev/null > "$slavejar"
+    rsync -a "$slavejar" "$NODENAME":"$WORKSPACE"/slave.jar
+    rm -f "$slavejar"
+    slavejar=
+    exec ssh "$NODENAME" java -jar "$WORKSPACE"/slave.jar
+fi
+exec ssh "$NODENAME" bash

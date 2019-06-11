@@ -2,3 +2,6 @@
 - import_tasks: tasks/jenkins-plugin.yml
   tags:
   - plugins
+- import_tasks: tasks/jenkins-nodes.yml
+  tags:
+  - jenkins-nodes

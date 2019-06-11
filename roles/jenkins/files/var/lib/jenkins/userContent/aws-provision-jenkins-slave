@@ -1,0 +1,432 @@
+#!/bin/bash
+
+set -e
+
+test -n "$2" || {
+    echo 'error: node name was not specified on the command line' >&2
+    exit 64
+}
+test -f ~/.ssh/id_rsa.pub || {
+    echo 'error: no local SSH key pair available to provision the slave' >&2
+    exit 64
+}
+test -n "$WORKSPACE" || {
+    echo 'error: $WORKSPACE is not defined' >&2
+    exit 64
+}
+
+JENKINS_URL="$1"
+NODENAME="$2"
+test -n "$NODENAME" || {
+    echo 'error: node name was not supplied' >&2
+    exit 64
+}
+AWS_REGION="$3"
+test -n "$AWS_REGION" || {
+    echo 'error: AWS region was not supplied' >&2
+    exit 64
+}
+AWS_AMI="$4"
+test -n "$AWS_AMI" || {
+    echo 'error: AMI was not supplied' >&2
+    exit 64
+}
+AWS_INSTANCE_TYPE="$5"
+test -n "$AWS_INSTANCE_TYPE" || {
+    echo 'error: instance type was not supplied' >&2
+    exit 64
+}
+AWS_SECURITY_GROUP="$6"
+test -n "$AWS_SECURITY_GROUP" || {
+    echo 'error: security group ID was not supplied' >&2
+    exit 64
+}
+AWS_SUBNET_ID="$7"
+#test -n "$AWS_SUBNET_ID" || {
+#    echo 'error: VPC subnet ID was not supplied' >&2
+#    exit 64
+#}
+REMOTE_USER="$8"
+test -n "$REMOTE_USER" || {
+    echo 'error: remote user was not supplied' >&2
+    exit 64
+}
+BLOCKDEVSIZE="$9"
+test -n "$BLOCKDEVSIZE" || {
+    echo 'error: size in GB of root block devices for the instance type was not supplied' >&2
+    exit 64
+}
+shift
+NUMBLOCKDEVS="$9"
+test -n "$NUMBLOCKDEVS" || {
+    echo 'error: number of ephemeral block devices for the instance type was not supplied' >&2
+    exit 64
+}
+
+. ~/.awscreds
+test -n "$AWS_ACCESS_KEY_ID" || {
+    echo 'error: $AWS_ACCESS_KEY_ID is not defined (in ~/.awscreds)' >&2
+    exit 64
+}
+test -n "$AWS_SECRET_ACCESS_KEY" || {
+    echo 'error: $AWS_SECRET_ACCESS_KEY is not defined (in ~/.awscreds)' >&2
+    exit 64
+}
+
+python -c 'import boto' || {
+    echo 'error: boto does not seem to be installed' >&2
+    exit 64
+}
+
+slavejar=
+cleanup() {
+    if [ -n "$slavejar" -a -e "$slavejar" ] ; then rm -f "$slavejar" ; fi
+}
+trap cleanup EXIT
+
+# =========== set up remote ssh keys ===========
+
+mkdir -p ~/nodes/"$NODENAME"
+
+if [ ! -f ~/nodes/"$NODENAME"/id_rsa ] ; then
+    ssh-keygen -t rsa -b 4096 -N '' -f ~/nodes/"$NODENAME"/id_rsa >&2
+fi
+if [ ! -f ~/nodes/"$NODENAME"/id_ecdsa ] ; then
+    ssh-keygen -t ecdsa       -N '' -f ~/nodes/"$NODENAME"/id_ecdsa >&2
+fi
+
+INSTANCEID_IPADDR=`
+AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" python -c '
+import os
+import sys
+import boto.ec2
+import time
+import subprocess
+import glob
+
+args = sys.argv[1:]
+
+REGION = args[0]
+AMI = args[1]
+INSTANCE_TYPE = args[2]
+SECURITY_GROUP = args[3]
+SUBNET_ID = args[4] if args[4] else None
+MACHINENAME = args[5]
+BLOCKDEVSIZE = int(args[6])
+NUMBLOCKDEVS = int(args[7])
+
+# ========== set up the machine ============
+
+client_ssh_key = file(os.path.expanduser("~/.ssh/id_rsa.pub")).read()
+server_rsa_private = file(os.path.expanduser("~/nodes/%s/id_rsa" % MACHINENAME)).read()
+server_rsa_public = file(os.path.expanduser("~/nodes/%s/id_rsa.pub" % MACHINENAME)).read()
+server_ecdsa_private = file(os.path.expanduser("~/nodes/%s/id_ecdsa" % MACHINENAME)).read()
+server_ecdsa_public = file(os.path.expanduser("~/nodes/%s/id_ecdsa.pub" % MACHINENAME)).read()
+
+server_rsa_private   = "".join(["    " + l for l in server_rsa_private.splitlines(True)])
+server_ecdsa_private = "".join(["    " + l for l in server_ecdsa_private.splitlines(True)])
+
+SETUP_SCRIPT = """#cloud-config
+
+ssh_authorized_keys:
+- %s
+ssh_keys:
+  rsa_private: |
+%s
+  rsa_public: %s
+  ecdsa_private: |
+%s
+  ecdsa_public: %s
+
+""" % (client_ssh_key,
+       server_rsa_private,
+       server_rsa_public,
+       server_ecdsa_private,
+       server_ecdsa_public)
+
+def assoc_ip_with_keys(ip, rsa_pubkey=None, ecdsa_pubkey=None):
+    p = os.path.expanduser("~/.ssh/known_hosts")
+    try:
+        contents = file(p).read()
+        oldcontents = contents.splitlines(False)
+        oldcontents = [x.split() for x in oldcontents]
+    except IOError, e:
+        if e.errno != 2: raise
+        contents = ""
+        oldcontents = []
+    for k in [rsa_pubkey, ecdsa_pubkey]:
+        if not k: continue
+        kt = rsa_pubkey.split()[0]
+        kf = rsa_pubkey.split()[1]
+        added = False
+        for l in oldcontents:
+            if len(l) >= 3:
+                if ip == l[0] and kt == l[1] and kf != l[2]:
+                    l = []
+                elif ip != l[0] and kt == l[1] and kf == l[2]:
+                    l = []
+                elif ip == l[0] and kt == l[1] and kf == l[2]:
+                    added = True
+        if not added:
+            oldcontents.append([ip, kt, kf])
+    newcontents = "\n".join(" ".join(c) for c in oldcontents)
+    if newcontents.strip() != contents.strip():
+        file(p, "w").write(newcontents)
+        os.chmod(p, 0644)
+
+conn = boto.ec2.connect_to_region(REGION)
+
+reservations = conn.get_all_instances(filters={"tag:Jenkins-Slave":MACHINENAME})
+machines = [m for r in reservations for m in r.instances]
+machines = [m for m in machines if m.state not in "terminated shutting-down"]
+if machines:
+    instance_id = machines[0].id
+else:
+    bdm = boto.ec2.blockdevicemapping.BlockDeviceMapping()
+    letters = "bcdefghi"[:NUMBLOCKDEVS]
+    if letters:
+        for n, l in enumerate(letters):
+            bd = boto.ec2.blockdevicemapping.BlockDeviceType()
+            bd.ephemeral_name ="ephemeral%s"%n
+            bdm["/dev/sd%s"%l] = bd
+    dev_sda1 = boto.ec2.blockdevicemapping.BlockDeviceType()
+    dev_sda1.size = BLOCKDEVSIZE
+    dev_sda1.delete_on_termination = True
+    bdm["/dev/sda1"] = dev_sda1
+    print >> sys.stderr, letters, NUMBLOCKDEVS, bdm
+    kwargs = {
+        "instance_type": INSTANCE_TYPE,
+        "user_data": SETUP_SCRIPT,
+        "security_group_ids": [SECURITY_GROUP],
+        "block_device_map": bdm,
+        "subnet_id": SUBNET_ID,
+        "instance_initiated_shutdown_behavior": "terminate",
+    }
+    for k, v in kwargs.items():
+        if k == "user_data": continue
+        print >> sys.stderr, k, v
+    resv = conn.run_instances(AMI, **kwargs)
+    instance_id = resv.instances[0].id
+    conn.create_tags([instance_id], {"Jenkins-Slave": MACHINENAME})
+
+i = conn.get_all_instances([instance_id])[0].instances[0]
+while True:
+  i.update()
+  print >> sys.stderr, i.id, i.state, i.instance_type, i.ip_address
+  if i.state == "stopped":
+    i.start()
+    time.sleep(5)
+    continue
+  if i.state == "running": break
+  time.sleep(5)
+
+address = i.ip_address
+assoc_ip_with_keys(address, server_rsa_public, server_ecdsa_public)
+print instance_id, address
+' "$AWS_REGION" "$AWS_AMI" "$AWS_INSTANCE_TYPE" "$AWS_SECURITY_GROUP" "$AWS_SUBNET_ID" "$NODENAME" "$BLOCKDEVSIZE" "$NUMBLOCKDEVS"
+`
+
+echo "$INSTANCEID_IPADDR" >&2
+INSTANCE_ID=$(echo "$INSTANCEID_IPADDR" | awk ' { print $1 } ')
+IPADDR=$(echo "$INSTANCEID_IPADDR" | awk ' { print $2 } ')
+
+# Clear out variables.
+AWS_ACCESS_KEY_ID=
+export AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY=
+export AWS_SECRET_ACCESS_KEY
+
+# Set new variables.
+remotenode="$IPADDR"
+remoteuser="$REMOTE_USER"
+
+for x in `seq 9` ; do
+    ssh -o "BatchMode yes" -o "RequestTTY no" -o "ConnectTimeout 5" "$remoteuser@$remotenode" true </dev/null >&2 && break || sleep 2
+done
+
+ssh -o "BatchMode yes" -o "RequestTTY no" -o "ConnectTimeout 5" "$remoteuser@$remotenode" true </dev/null >&2 || {
+    echo timed out: nuking VM "$INSTANCE_ID" >&2
+    . ~/.awscreds
+    AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" python -c '
+import sys
+import boto.ec2
+
+args = sys.argv[1:]
+
+REGION = args[0]
+INSTANCE_ID = args[1]
+instances = [INSTANCE_ID]
+
+print "Instance IDs", instances
+
+conn = boto.ec2.connect_to_region(REGION)
+conn.terminate_instances(instances)
+' "$AWS_REGION" "$INSTANCE_ID"
+    exit 16
+}
+
+ssh -o "BatchMode yes" -o "RequestTTY no" "$remoteuser@$remotenode" >&2 << EOF
+    set -e
+
+    if [ ! -x /usr/local/bin/shutdown-if-idle ] ; then
+        sudo tee /usr/local/bin/shutdown-if-idle >/dev/null << "MYEOF2"
+#!/bin/bash
+
+lastline=\`loginctl | tail -1 | awk ' { print \$1 } '\`
+if [ "\$lastline" -gt "0" ] ; then
+    echo Delaying poweroff because "\$lastline" sessions are still active.
+    rm -f /run/shutdown-if-idle
+else
+    echo No active sessions, evaluating poweroff option.
+    if [ ! -f /run/shutdown-if-idle ] ; then echo 0 > /run/shutdown-if-idle ; fi
+    times=\$( cat /run/shutdown-if-idle || true)
+    times=\$(( \$times + 1 ))
+    echo "\$times" > /run/shutdown-if-idle
+    # if machine has been idle for 10 executions of this program, then poweroff.
+    if [ "\$times" == "10" ] ; then
+	    echo No active sessions for \$times minutes, shutting down.
+        /usr/sbin/poweroff
+    else
+	    echo No active sessions for \$times minutes, holding back on shutting down.
+    fi
+fi
+MYEOF2
+        sudo chown root.root /usr/local/bin/shutdown-if-idle
+        sudo chmod 755 /usr/local/bin/shutdown-if-idle
+    fi
+
+    if [ ! -x /etc/systemd/system/shutdown-if-idle.service ] ; then
+        sudo tee /etc/systemd/system/shutdown-if-idle.service >/dev/null << MYEOF2
+[Unit]
+Description=Shutdown the system if there are no user sessions
+
+[Service]
+ExecStart=/usr/local/bin/shutdown-if-idle
+Type=oneshot
+MYEOF2
+        sudo chown root.root /etc/systemd/system/shutdown-if-idle.service
+        sudo chmod 644 /etc/systemd/system/shutdown-if-idle.service
+        sudo systemctl --system daemon-reload
+    fi
+
+    if [ ! -x /etc/systemd/system/shutdown-if-idle.timer ] ; then
+        sudo tee /etc/systemd/system/shutdown-if-idle.timer >/dev/null << MYEOF2
+[Unit]
+Description=Try to shutdown the system periodically if there are no user sessions
+
+[Install]
+WantedBy=multi-user.target
+
+[Timer]
+OnBootSec=90
+OnUnitActiveSec=60
+MYEOF2
+        sudo chown root.root /etc/systemd/system/shutdown-if-idle.timer
+        sudo chmod 644 /etc/systemd/system/shutdown-if-idle.timer
+        sudo systemctl --system daemon-reload
+        sudo systemctl --system enable shutdown-if-idle.timer
+        sudo systemctl --system restart shutdown-if-idle.timer
+    fi
+
+    echo "Poweroff after idle set up successfully"
+
+    # This is necessary because otherwise the zfs-fedora-installer
+    # blows up (packages get corrupted during install) if enforcing
+    # is on.  Some day I will figure out why that happens.
+    sudo setenforce 0
+
+    if find -name .blockdevs | grep -q blockdevs ; then
+        true
+    else
+        if [ -e /dev/xvdb -o -e /dev/nvme0 ] ; then
+            set -x
+            echo "Preparing ephemeral block devices"
+            mount | grep /mnt && {
+                sudo umount /mnt || {
+                    sudo dnf install -y lsof
+                    sudo lsof -n | grep /mnt
+                }
+            } || { true ; }
+            sudo dnf install -qy btrfs-progs
+            if [ -e /dev/xvdb ] ; then
+                ls -la /dev/xvd[bcdefghijklmnopqrstuvwxyz]
+                (for a in /dev/xvd[bcdefghijklmnopqrstuvwxyz] ; do sudo umount $a ; done) || true
+                sudo mkfs.btrfs -f /dev/xvd[bcdefghijklmnopqrstuvwxyz]
+                sudo mount /dev/xvdb /mnt
+            elif [ -e /dev/nvme0 ] ; then
+                ls -la /dev/nvme[023456789]n[123456789]
+                (for a in /dev/nvme[023456789]n[123456789] ; do sudo umount $a ; done) || true
+                sudo mkfs.btrfs -f /dev/nvme[023456789]n[123456789]
+                sudo mount /dev/nvme0n1 /mnt
+            fi
+            mount | grep /mnt || true
+        fi
+        touch .blockdevs
+        echo "Block devices set up successfully"
+    fi
+
+    WORKSPACE=\$(realpath "$WORKSPACE")
+    if echo "\$WORKSPACE"/ | grep ^/mnt/ ; then
+        sudo mkdir -p "\$WORKSPACE"
+        sudo chown "\$USER" "\$WORKSPACE"
+        sudo chmod 700 "\$WORKSPACE"
+    else
+        sudo mkdir -p "\$WORKSPACE"
+        mountpoint "\$WORKSPACE" || {
+            sudo mount --bind /mnt "\$WORKSPACE"
+        }
+        sudo chown "\$USER" "\$WORKSPACE"
+        sudo chmod 700 "\$WORKSPACE"
+    fi
+
+    echo "Workspace \$WORKSPACE set up successfully"
+
+    if [ -n "$JENKINS_URL" ] ; then
+        if find -mmin -3600 -a -name .update | grep -q update ; then
+            true
+        else
+            echo "Launching updates"
+            sudo -H dnf update -qy
+            sudo -H systemctl restart sshd.service
+            touch .update
+        fi
+
+        command -v java > /dev/null || {
+            echo "Installing Java"
+            sudo dnf install -qy java-openjdk-headless
+        }
+
+        command -v git > /dev/null || {
+            echo "Installing Git"
+            sudo dnf install -qy git
+        }
+
+        # This is necessary because otherwise the zfs-fedora-installer
+        # demands so much randomness, it can't complete.
+        rpm -q haveged >/dev/null || {
+            echo "Installing and enabling haveged"
+            sudo dnf install -qy haveged
+            sudo systemctl enable haveged.service
+        sudo systemctl start haveged.service
+        }
+    fi
+EOF
+
+if [ -n "$JENKINS_URL" ] ; then
+    slavejar=`mktemp`
+    curl -s "$JENKINS_URL"/jnlpJars/slave.jar </dev/null > "$slavejar"
+    rsync -a "$slavejar" "$remoteuser@$remotenode":"$WORKSPACE"/slave.jar
+    rm -f "$slavejar"
+    slavejar=
+    exec ssh -o "BatchMode yes" -o "RequestTTY no" "$remoteuser@$remotenode" exec java -jar "$WORKSPACE"/slave.jar
+fi
+shift
+shift
+shift
+shift
+shift
+shift
+shift
+shift
+shift
+exec ssh "$remoteuser@$remotenode" "$@"

@@ -1,11 +1,12 @@
-<org.jenkinsci.plugins.workflow.libs.GlobalLibraries plugin="workflow-cps-global-lib@2.9">
+<?xml version='1.1' encoding='UTF-8'?>
+<org.jenkinsci.plugins.workflow.libs.GlobalLibraries plugin="workflow-cps-global-lib@2.13">
   <libraries>
 {%- if 'sharedLibraries' in jenkins %}
 {%-   for x in jenkins.sharedLibraries %}
     <org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
       <name>{{ x.name }}</name>
       <retriever class="org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever">
-        <scm class="jenkins.plugins.git.GitSCMSource" plugin="git@3.9.1">
+        <scm class="jenkins.plugins.git.GitSCMSource" plugin="git@3.10.0">
           <id>{{ x.id }}</id>
           <remote>{{ x.remote }}</remote>
           <credentialsId></credentialsId>
@@ -14,6 +15,7 @@
           </traits>
         </scm>
       </retriever>
+      <defaultVersion>master</defaultVersion>
       <implicit>false</implicit>
       <allowVersionOverride>true</allowVersionOverride>
       <includeInChangesets>false</includeInChangesets>

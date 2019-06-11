@@ -1,0 +1,19 @@
+- name: get crumb
+  shell: |
+      set -e
+      crumb=$(curl -s '{{ jenkins.url }}/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)')
+      echo "$crumb" | grep "Jenkins-Crumb"
+  register: jenkinscrumb
+  until: jenkinscrumb.rc == 0
+  retries: 3600
+  delay: 1
+
+- name: reload jenkins from disk
+  uri:
+    url: '{{ jenkins.url }}/reload'
+    method: POST
+    status_code: 302
+    headers:
+      Jenkins-Crumb: '{{ jenkinscrumb.stdout_lines[0].split(":")[1] }}'
+  register: reload_jenkins
+  changed_when: reload_jenkins.status|default(None)|string == 302|string
