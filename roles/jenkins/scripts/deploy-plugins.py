@@ -25,11 +25,30 @@ jenkins_class = HTTPSConnection if jenkins_url.startswith("https") else HTTPConn
 jenkins_path = jenkins.get("path", "/var/lib/jenkins")
 jenkins_plugin_path = os.path.join(jenkins_path, "plugins")
 
+crumb = None
+
+
+def get_crumb():
+    global crumb
+    global jenkins_url
+    if crumb is None:
+        crumbpath = '/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)'
+        url = jenkins_url + crumbpath
+        conn = jenkins_class(netloc)
+        conn.request('GET', url)
+        response = conn.getresponse()
+        data = response.read()
+        assert response.status == 200, response.status
+        crumb = data
+    return crumb.split(":")
+
+
 def existing_plugins_and_versions():
+    crumbkey, crumbvalue = get_crumb()
     conn = jenkins_class(netloc)
     try:
         url = jenkins_url + "/pluginManager/api/xml?depth=1&xpath=/*/*/shortName|/*/*/version&wrapper=plugins"
-        conn.request('GET', url)
+        conn.request('GET', url, headers={crumbkey: crumbvalue})
         response = conn.getresponse().read()
     except Exception, e:
         raise Exception("Failed to connect to Jenkins with error %s.  URL: %s" % ( e, url ))
@@ -45,6 +64,7 @@ def existing_plugins_and_versions():
 
 def request_install_of_plugins(plugins_to_install):
     "Returns changed and could_not_install."
+    crumbkey, crumbvalue = get_crumb()
     existing = set(existing_plugins_and_versions())
     logging.info("Existing plugins and versions: %s", existing)
     to_install = set(plugins_to_install) - existing
@@ -62,11 +82,11 @@ def request_install_of_plugins(plugins_to_install):
             'POST',
             jenkins_url + '/pluginManager/installNecessaryPlugins',
             text,
-            {"Content-Type": "text/xml"},
+            {"Content-Type": "text/xml", crumbkey: crumbvalue},
         )
         response = conn.getresponse()
         data = response.read()
-        assert response.status == 302
+        assert response.status == 302, response.status
     for _ in range(30):
         remaining_to_install = set(plugins_to_install) - set(existing_plugins_and_versions())
         logging.info("Still remaining to install: %s", remaining_to_install)
