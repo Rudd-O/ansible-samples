@@ -1,9 +1,0 @@
----
-
-# Copied to generic-build-job/handlers/main.yml
-
-- name: reload jenkins
-  import_tasks: reload.yml
-
-- name: restart jenkins
-  shell: service jenkins restart

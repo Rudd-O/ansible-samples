@@ -1,5 +1,0 @@
-<?xml version='1.1' encoding='UTF-8'?>
-<jenkins.model.JenkinsLocationConfiguration>
-  <adminAddress>Jenkins@{{ inventory_hostname }} &lt;jenkins@{{ ansible_nodename }}&gt;</adminAddress>
-  <jenkinsUrl>{{ jenkins.url }}</jenkinsUrl>
-</jenkins.model.JenkinsLocationConfiguration>

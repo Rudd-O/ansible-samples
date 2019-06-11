@@ -1,4 +1,0 @@
----
-
-- name: install required executable gpg
-  package: name=gnupg state=present
