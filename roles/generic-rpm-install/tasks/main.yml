@@ -1,10 +1,6 @@
 # Conforms to the latest Deployment policies.md in the documentation.
 
 - block:
-  - name: remove shared directory for packages
-    file: name='{{ generic_rpm_install.package_cache_root }}/{{ project }}/packages' state=absent
-    when: ansible_distribution in "Fedora Qubes"
-
   - name: create repo file
     copy:
       content: |
@@ -20,24 +16,26 @@
       mode: 0644
       owner: root
       group: root
-    when: ansible_distribution in "Fedora Qubes" and generic_rpm_install.configrepo
+    when: generic_rpm_install.configrepo
     register: repofile
 
-  - name: delete old repo file
-    file: name=/etc/yum.repos.d/{{ project }}.repo state=absent
-
-  - set_fact:
-      packages: '{{ [package] }}'
-    when: packages is not defined and package is defined
+  - name: construct callee parameters
+    set_fact:
+      __generic_rpm_install:
+        packages: '{{ [package] }}'
+    no_log: yes
 
   - import_role:
       name: install-packages
     vars:
       state: latest
-    when: packages is defined
+      packages: '{{ __generic_rpm_install["packages"] }}'
+
+  - set_fact:
+      __generic_rpm_install: {}
+    no_log: yes
 
   - set_fact:
       '{{ register_var|default("generic_rpm_install") }}': '{{ package_install }}'
-    when: ansible_distribution in "Fedora Qubes" and packages is defined
   tags:
   - generic_rpm_install
