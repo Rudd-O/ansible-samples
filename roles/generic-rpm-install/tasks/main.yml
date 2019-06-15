@@ -1,6 +1,16 @@
 # Conforms to the latest Deployment policies.md in the documentation.
 
+- fail: msg="Package is not defined"
+  when: package is not defined
+
 - block:
+  - name: construct callee parameters
+    set_fact:
+      _generic_rpm_install:
+        _packages: '{{ [package] }}'
+
+  - debug: var=_generic_rpm_install
+
   - name: create repo file
     copy:
       content: |
@@ -19,17 +29,11 @@
     when: generic_rpm_install.configrepo
     register: repofile
 
-  - name: construct callee parameters
-    set_fact:
-      __generic_rpm_install:
-        packages: '{{ [package] }}'
-    no_log: yes
-
   - import_role:
       name: install-packages
     vars:
       state: latest
-      packages: '{{ __generic_rpm_install["packages"] }}'
+      packages: '{{ _generic_rpm_install["_packages"] }}'
 
   - set_fact:
       __generic_rpm_install: {}
@@ -37,5 +41,6 @@
 
   - set_fact:
       '{{ register_var|default("generic_rpm_install") }}': '{{ package_install }}'
+  when: package is defined
   tags:
   - generic_rpm_install
