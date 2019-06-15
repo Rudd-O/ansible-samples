@@ -33,12 +33,11 @@
   - zfs
   - dkms
 
-- name: eliminate obsolete versions of DKMS SPL and ZFS
+- name: eliminate obsolete versions of DKMS ZFS
   shell: test -d /var/lib/dkms/{{ item }}/ || exit 0 ; cd /var/lib/dkms/{{ item }}/ && for f in */source ; do if [ ! -f "$f/dkms.conf" ] ; then rm -rf $(dirname "$f") ; echo ELIMINATED "$f" ; fi ; done
   register: deleted_obsolete
   changed_when: '"ELIMINATED" in deleted_obsolete.stdout'
   with_items:
-  - spl
   - zfs
   tags:
   - zfs
@@ -59,7 +58,7 @@
           echo No kernel $ver >&2
           continue
         fi
-        for module in zfs spl ; do
+        for module in zfs ; do
           for action in uninstall remove ; do
             dkmsver=`(ls --sort=time -d1 /usr/src/$module-* || true) | head -1` ; dkmsver=${dkmsver#/usr/src/$module-}
             test -n "$dkmsver" || continue
@@ -90,9 +89,9 @@
           done
         done
       done
-  register: uninstall_old_spl_zfs
+  register: uninstall_old_zfs
   when: mustrecompile.changed
-  changed_when: "'YES' in uninstall_old_spl_zfs.stdout"
+  changed_when: "'YES' in uninstall_old_zfs.stdout"
   tags:
   - zfs
   - dkms

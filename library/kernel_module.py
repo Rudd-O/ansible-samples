@@ -72,7 +72,7 @@ def loaded(module, name):
             f = file(sanitized, "wb")
             f.write(name)
             f.close()
-            os.chmod(sanitized, 0644)
+            os.chmod(sanitized, 0o644)
         changed = True
         if msg != NOTHING_TO_DO:
             msg = msg + ", %s created" % sanitized

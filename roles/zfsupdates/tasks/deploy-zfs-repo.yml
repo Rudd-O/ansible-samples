@@ -20,4 +20,5 @@
       name: generic-rpm-install
     vars:
       project: zfsupdates
+      package: coreutils
   when: use_generic_rpm_install

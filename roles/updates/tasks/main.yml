@@ -11,7 +11,7 @@
   tags:
   - zfs
 
-- include_role:
+- import_role:
     name: zfsupdates
   vars:
     deployzfs_stage: one
@@ -45,7 +45,7 @@
   when: '"kmod-nvidia" in "".join((do_updates_dnf.results|default([]) + do_updates_dom0.stdout_lines|default([])))'
   register: redo_akmods
 
-- include_role:
+- import_role:
     name: zfsupdates
   vars:
     deployzfs_stage: two
