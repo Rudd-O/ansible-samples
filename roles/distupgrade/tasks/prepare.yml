@@ -12,3 +12,7 @@
 - name: enable debug shell
   service: name=debug-shell state=started enabled=yes
   when: debug_shell
+
+- name: set SELinux to permissive
+  shell: sed -i 's/enforcing/permissive/' /etc/selinux/config
+  when: ansible_distribution_version|int >= 29
