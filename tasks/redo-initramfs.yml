@@ -12,6 +12,11 @@
           vmlinuz=${vmlinuz%.img}
           initramfs=${initramfs%.knowngood}
           initramfs=${initramfs%.knowngood}
+          if echo "$initramfs" | grep -q initramfs ; then
+              true
+          else
+              initramfs=initramfs-$initramfs
+          fi
           ver=${vmlinuz#vmlinuz-}
           if [ ! -f "$vmlinuz" ] ; then
               echo "$vmlinuz does not exist, removing obsolete initramfs and /lib/modules" >&2
