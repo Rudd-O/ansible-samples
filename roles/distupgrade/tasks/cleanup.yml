@@ -10,3 +10,51 @@
 - name: disable debug shell
   service: name=debug-shell state=stopped enabled=no
   when: debug_shell
+
+- name: create dbus-broker override directory
+  file:
+    name: /etc/systemd/system/{{ item }}
+    state: directory
+  with_items:
+  - dbus-broker.service.d
+  - systemd-resolved.service.d
+  when: ansible_distribution_version|int == 30
+
+- name: create dbus-broker override
+  copy:
+    content: |
+      [Service]
+      ProtectKernelTunables=no
+      PrivateDevices=no
+    dest: /etc/systemd/system/{{ item }}/protectkerneltunables.conf
+  with_items:
+  - dbus-broker.service.d
+  - systemd-resolved.service.d
+  when: ansible_distribution_version|int == 30
+
+- name: fix contexts of root directories
+  shell: |
+    mkdir /tmp/fixcontexts
+    mount -o bind / /tmp/fixcontexts
+    cd /tmp/fixcontexts
+    ls -lZd * | grep unlabeled && {
+      chcon -t device_t dev
+      chcon -t home_root_t home
+      chcon -t root_t proc sys
+      chcon -t var_run_t run
+    } || :
+  when: ansible_distribution_version|int == 30
+
+- name: eliminate dbus-broker override
+  file:
+    name: /etc/systemd/system/{{ item }}/protectkerneltunables.conf
+    state: absent
+  with_items:
+  - dbus-broker.service.d
+  - systemd-resolved.service.d
+  when: ansible_distribution_version|int != 30
+
+- name: set SELinux to enforcing
+  shell: |
+    sed -i 's/=permissive/=enforcing/' /etc/selinux/config
+    setenforce Enforcing
