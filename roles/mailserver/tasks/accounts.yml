@@ -15,7 +15,7 @@
   with_items: '{{ unix_users }}'
 
 - name: create user inbox
-  shell: cd mail ; test -f "inbox" || { touch "inbox" && chmod 600 "inbox" && echo CREATED ; }
+  shell: test -f ~/mail/inbox || { touch ~/mail/inbox && chmod 600 ~/mail/inbox && echo CREATED ; }
   become: True
   become_user: '{{ item.name }}'
   register: create_inbox
@@ -23,7 +23,7 @@
   with_items: '{{ unix_users }}'
 
 - name: create user spambox
-  shell: cd mail ; test -f "SPAM" || { touch "SPAM" && chmod 600 "SPAM" && echo CREATED ; }
+  shell: test -f ~/mail/SPAM || { touch ~/mail/SPAM && chmod 600 ~/mail/SPAM && echo CREATED ; }
   become: True
   become_user: '{{ item.name }}'
   register: create_spambox
