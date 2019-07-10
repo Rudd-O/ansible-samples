@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # (c) 2017, Rudd-O.  GPLv2+.
@@ -8,7 +8,10 @@ import glob
 import os
 import re
 import subprocess
-import urllib
+try:
+    from urllib import unquote
+except ImportError:
+    from urllib.parse import unquote
 
 
 DOCUMENTATION = """
@@ -31,7 +34,7 @@ def process(module, jids):
     rets = {"changed": False, "msg": []}
     for jid, password in jids.items():
         accts = glob.glob("/var/lib/prosody/*/accounts/*.dat")
-        accts = [urllib.unquote(s[len("/var/lib/prosody/"):-4]) for s in accts]
+        accts = [unquote(s[len("/var/lib/prosody/"):-4]) for s in accts]
         accts = [(x.split(os.path.sep)[0], x.split(os.path.sep)[-1]) for x in accts]
         user, domain = jid.split("@", 1)
         exists = False
@@ -40,26 +43,43 @@ def process(module, jids):
                 exists = True
         if password not in (None, "None", "") and not exists:
             if not module.check_mode:
-                p = subprocess.Popen(["prosodyctl", "adduser", jid],
+                cmd = ["prosodyctl", "adduser", jid]
+                p = subprocess.Popen(cmd,
                                      stdin=subprocess.PIPE,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT)
-                stdout, _ = p.communicate("%s\n%s\n" % (password, password))
+                stdout, _ = p.communicate(("%s\n%s\n" % (password, password)).encode("utf-8"))
                 ret = p.wait()
                 if ret != 0:
-                    module.fail_json(rc=ret, msg=stdout)
-            rets['changed'] = True
-            rets['msg'].append("created new account %s@%s" % (user, domain))
+                    if stdout == b"That user already exists\n":
+                        cmd = ["prosodyctl", "passwd", jid]
+                        p = subprocess.Popen(cmd,
+                                             stdin=subprocess.PIPE,
+                                             stdout=subprocess.PIPE,
+                                             stderr=subprocess.STDOUT)
+                        stdout, _ = p.communicate(("%s\n%s\n" % (password, password)).encode("utf-8"))
+                        ret = p.wait()
+                        if ret != 0:
+                            module.fail_json(rc=ret, msg="While running %s: %s" % (cmd, stdout))
+                        else:
+                            rets['changed'] = True
+                            rets['msg'].append("changed password of account %s@%s" % (user, domain))
+                    else:
+                        module.fail_json(rc=ret, msg="While running %s: %s" % (cmd, stdout))
+                else:
+                    rets['changed'] = True
+                    rets['msg'].append("created new account %s@%s" % (user, domain))
         elif password in (None, "None", "") and exists:
             if not module.check_mode:
-                p = subprocess.Popen(["prosodyctl", "deluser", jid],
+                cmd = ["prosodyctl", "deluser", jid]
+                p = subprocess.Popen(cmd,
                                      stdin=subprocess.PIPE,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT)
-                stdout, _ = p.communicate("%s\n%s\n" % (password, password))
+                stdout, _ = p.communicate(("%s\n%s\n" % (password, password)).encode("utf-8"))
                 ret = p.wait()
                 if ret != 0:
-                    module.fail_json(rc=ret, msg=stdout)
+                    module.fail_json(rc=ret, msg="While running %s: %s" % (cmd, stdout))
             rets['changed'] = True
             rets['msg'].append("deleted account %s@%s" % (user, domain))
     if rets['msg']:
