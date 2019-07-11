@@ -1,13 +1,10 @@
 # Conforms to the latest Deployment policies.md in the documentation.
 
-- fail: msg="Package is not defined"
-  when: package is not defined
-
 - block:
   - name: construct callee parameters
     set_fact:
       _generic_rpm_install:
-        _packages: '{{ [package] }}'
+        _packages: '{{ packages|default([package]) }}'
 
   - debug: var=_generic_rpm_install
 
@@ -54,6 +51,5 @@
 
   - set_fact:
       '{{ register_var|default("generic_rpm_install") }}': '{{ package_install }}'
-  when: package is defined
-  tags:
-  - generic_rpm_install
+  when: package is defined or packages is defined
+  tags: generic_rpm_install
