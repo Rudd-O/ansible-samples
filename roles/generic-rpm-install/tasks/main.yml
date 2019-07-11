@@ -5,8 +5,8 @@
     set_fact:
       _generic_rpm_install:
         _packages: '{{ packages|default([package]) }}'
-
-  - debug: var=_generic_rpm_install
+    check_mode: no
+    no_log: yes
 
   - name: create repo file
     copy:
@@ -27,7 +27,7 @@
       mode: 0644
       owner: root
       group: root
-    when: generic_rpm_install.configrepo
+    when: generic_rpm_install.configrepo and __generic_rpm_install_already_setup is not defined
     register: repofile
 
   - name: copy RPM signing key
@@ -37,7 +37,7 @@
       owner: root
       group: root
       mode: 0644
-    when: generic_rpm_install.configrepo and generic_rpm_install.gpgcheck
+    when: generic_rpm_install.configrepo and generic_rpm_install.gpgcheck and __generic_rpm_install_already_setup is not defined
 
   - import_role:
       name: install-packages
@@ -47,9 +47,10 @@
 
   - set_fact:
       __generic_rpm_install: {}
+      __generic_rpm_install_already_setup: True
+      '{{ register_var|default("generic_rpm_install") }}': '{{ package_install }}'
+    check_mode: no
     no_log: yes
 
-  - set_fact:
-      '{{ register_var|default("generic_rpm_install") }}': '{{ package_install }}'
   when: package is defined or packages is defined
   tags: generic_rpm_install

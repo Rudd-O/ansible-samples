@@ -1,26 +1,28 @@
-- name: install software (dom0)
-  become: true
-  shell: rpm -q {{ " ".join(packages) }} && echo "Nothing to do" || qubes-dom0-update -y {{ (options|default([])|join(" ")) }} {{ " ".join(packages) }}
-  register: qubes_dom0_install
+- block:
+  - name: install software (dom0)
+    become: true
+    shell: rpm -q {{ " ".join(packages) }} && echo "Nothing to do" || qubes-dom0-update -y {{ (options|default([])|join(" ")) }} {{ " ".join(packages) }}
+    changed_when: '"Nothing to do" not in qubes_dom0_install.stdout'
+    register: qubes_dom0_install
+    notify: '{{ notify|default(omit) }}'
+  - name: set package_install variable
+    set_fact:
+      package_install: '{{ qubes_dom0_install|default(None) }}'
+    no_log: yes
+    check_mode: no
   when: ansible_distribution == "Qubes"
-  changed_when: '"Nothing to do" not in qubes_dom0_install.stdout'
-  notify: '{{ notify|default(omit) }}'
 
-- name: install software (non-dom0)
-  become: true
-  package:
-    name: '{{ packages }}'
-    state: '{{ state|default("present") }}'
+- block:
+  - name: install software (non-dom0)
+    become: true
+    package:
+      name: '{{ packages }}'
+      state: '{{ state|default("present") }}'
+    register: normal_package_install
+    notify: '{{ notify|default(omit) }}'
+  - name: set package_install variable
+    set_fact:
+      package_install: '{{ normal_package_install|default(None) }}'
+    no_log: yes
+    check_mode: no
   when: ansible_distribution != "Qubes"
-  register: normal_package_install
-  notify: '{{ notify|default(omit) }}'
-
-- name: set package_install variable
-  set_fact:
-    package_install: '{{ qubes_dom0_install|default(None) }}'
-  when: ansible_distribution == "Qubes"
-- name: set package_install variable
-  set_fact:
-    package_install: '{{ normal_package_install|default(None) }}'
-  when: ansible_distribution != "Qubes"
-  check_mode: no

@@ -1,13 +1,8 @@
 generic_rpm_install:
-  # This lets you define where the packages come from (on the local machine).
-  package_source: files/deliverables
-  # This lets you define where the packages are cached (on the target machine).
-  package_cache_root: /var/cache/generic-rpm-install
   dnf_repo_base_url: http://dnf-updates.dragonfear/
   dnf_repo_name: dnf-updates
   configrepo: True
   gpgcheck: False
 # gpgkey: key material, multiline, ASCII armored, must pass this if gpgcheck is true
-# project: you must pass this
-# package: this is optional
+# package: you must pass this, or a packages variable with a list
 # register_var: result_var_name
