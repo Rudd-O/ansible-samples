@@ -10,6 +10,7 @@ generic_rpm_install:
   dnf_repo_name: dnf-updates
   configrepo: True
   gpgcheck: False
+# gpgkey: key material, multiline, ASCII armored, must pass this if gpgcheck is true
 # project: you must pass this
 # package: this is optional
 # register_var: result_var_name

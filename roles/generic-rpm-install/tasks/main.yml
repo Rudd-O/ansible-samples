@@ -19,7 +19,11 @@
         baseurl={{ generic_rpm_install.dnf_repo_base_url }}/{% if ansible_distribution in "Qubes" %}q{% else %}fc{% endif %}$releasever/
         enabled=1
         gpgcheck={% if generic_rpm_install.gpgcheck %}1{% else %}0{% endif %}
-
+        
+        {% if generic_rpm_install.gpgcheck %}
+        gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-{{ generic_rpm_install.dnf_repo_name }}
+        {% endif %}
+        
         metadata_expire=30
 
       dest: /etc/yum.repos.d/{{ generic_rpm_install.dnf_repo_name }}.repo
@@ -28,6 +32,15 @@
       group: root
     when: generic_rpm_install.configrepo
     register: repofile
+
+  - name: copy RPM signing key
+    copy:
+      content: "{{ generic_rpm_install.gpgkey }}"
+      dest: /etc/pki/rpm-gpg/RPM-GPG-KEY-{{ generic_rpm_install.dnf_repo_name }}
+      owner: root
+      group: root
+      mode: 0644
+    when: generic_rpm_install.configrepo and generic_rpm_install.gpgcheck
 
   - import_role:
       name: install-packages
