@@ -1,7 +1,4 @@
 generic_rpm_install:
-  qubes_fedora_map:
-    3.1: 20
-    3.2: 23
   # This lets you define where the packages come from (on the local machine).
   package_source: files/deliverables
   # This lets you define where the packages are cached (on the target machine).
