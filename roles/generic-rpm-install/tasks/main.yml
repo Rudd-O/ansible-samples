@@ -6,7 +6,6 @@
       _generic_rpm_install:
         _packages: '{{ packages|default([package]) }}'
     check_mode: no
-    no_log: yes
 
   - name: create repo file
     copy:
