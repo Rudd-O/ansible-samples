@@ -84,7 +84,7 @@ EXAMPLES = r"""
 def write_changes(module,contents,dest):
 
     tmpfd, tmpfile = tempfile.mkstemp()
-    f = os.fdopen(tmpfd,'wb')
+    f = os.fdopen(tmpfd,'w')
     f.write(contents)
     f.close()
 
@@ -138,7 +138,7 @@ def main():
             module.fail_json(rc=257, msg='Destination %s does not exist !' % dest)
         contents = ''
     else:
-        f = open(dest, 'rb')
+        f = open(dest, 'r')
         contents = f.read()
         f.close()
 
