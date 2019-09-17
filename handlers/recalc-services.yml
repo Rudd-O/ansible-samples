@@ -1,2 +1,2 @@
 - name: recalc services that need to be restarted
-  shell: if test -x /usr/local/bin/needs-restart-collector ; then /usr/local/bin/needs-restart-collector ; fi
+  shell: if test -x /usr/local/bin/needs-restart-collector ; then systemctl restart needs-restart-collector ; fi
