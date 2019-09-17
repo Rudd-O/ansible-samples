@@ -41,6 +41,7 @@ allow_registration = false;
 ssl = {
 	key = "{{ data.key.path }}";
 	certificate = "{{ data.assembled_certificate.path }}";
+	{% if xmpp.ssl.protocol)|default(False) != False %}protocol = "{{ xmpp.ssl.protocol }}";{% endif %}
 }
 {% endif %}
 {% endfor %}
@@ -56,13 +57,13 @@ c2s_require_encryption = true
 -- NOTE: Your version of LuaSec must support certificate verification!
 -- For more information see http://prosody.im/doc/s2s#security
 
-s2s_secure_auth = false
+s2s_secure_auth = true
 
 -- Many servers don't support encryption or have invalid or self-signed
 -- certificates. You can list domains here that will not be required to
 -- authenticate using certificates. They will be authenticated using DNS.
 
---s2s_insecure_domains = { "gmail.com" }
+s2s_insecure_domains = { "gmail.com" }
 
 -- Even if you leave s2s_secure_auth disabled, you can still require valid
 -- certificates for some domains by specifying a list here.
@@ -130,6 +131,7 @@ VirtualHost "{{ host.replace('"', '\\"') }}"
 	ssl = {
 		key = "{{ data.key.path }}";
 		certificate = "{{ data.assembled_certificate.path }}";
+		{% if xmpp.ssl.protocol)|default(False) != False %}protocol = "{{ xmpp.ssl.protocol }}";{% endif %}
 	}
 
 {% if xmpp.conference.enabled %}

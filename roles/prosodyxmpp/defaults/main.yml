@@ -9,6 +9,9 @@ xmpp:
     client_starttls: 5222
     client_ssl: 5223
     server: 5269
+  # SSL configuration -- https://prosody.im/doc/advanced_ssl_config
+  # ssl:
+  #   protocol: tlsv1_2
   # See README.md Conference support subheading for info on the following conference variables:
   conference:
     subdomain: conference
