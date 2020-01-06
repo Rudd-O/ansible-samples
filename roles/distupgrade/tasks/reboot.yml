@@ -25,7 +25,7 @@
 - block:
   - name: wait for server to come back after reboot
     local_action: wait_for port=22 delay=15 timeout={{ timeout|default(600) }} search_regex=OpenSSH host={{ ansible_ssh_host|default(inventory_hostname) }} state=started
-    retries: '{{ 86400 / (timeout|default(600)|int) }}'
+    retries: '{{ (86400 / (timeout|default(600)|int))|int }}'
     when: ansible_connection != "qubes"
     register: waitalive
     failed_when: 'waitalive.failed|default(False) and "reset by peer" not in waitalive.module_stderr|default("")'
@@ -33,7 +33,7 @@
 
   - name: wait for server to come back after reboot, take 2
     local_action: wait_for port=22 delay=15 timeout={{ timeout|default(600) }} search_regex=OpenSSH host={{ ansible_ssh_host|default(inventory_hostname) }} state=started
-    retries: '{{ 86400 / (timeout|default(600)|int) }}'
+    retries: '{{ (86400 / (timeout|default(600)|int))|int }}'
     when: ansible_connection != "qubes" and ("reset by peer" in waitalive.module_stderr|default(""))
     become: False
 

@@ -17,7 +17,7 @@
         fi
         {% if ansible_check_mode %}echo {% endif %}GRUB_SET_DEFAULT=/usr/sbin/grub{% if ansible_distribution in "Fedora Qubes" %}2{% endif %}-set-default
         {% if ansible_check_mode %}echo {% endif %}$GRUB_MKCONFIG -o $GRUB_MENU_LST || exit $?
-        {% if ansible_check_mode %}echo {% endif %}/usr/sbin/grubby --set-default-index=0 || $GRUB_SET_DEFAULT 0
+        {% if ansible_check_mode %}echo {% endif %}test -f /usr/sbin/grubby && /usr/sbin/grubby --set-default-index=0 || $GRUB_SET_DEFAULT 0
   check_mode: no
   when: qubes is not defined or qubes.vm_type is not defined
   tags:
