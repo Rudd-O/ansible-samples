@@ -34,7 +34,15 @@
   - dkms
 
 - name: eliminate obsolete versions of DKMS ZFS
-  shell: test -d /var/lib/dkms/{{ item }}/ || exit 0 ; cd /var/lib/dkms/{{ item }}/ && for f in */source ; do if [ ! -f "$f/dkms.conf" ] ; then rm -rf $(dirname "$f") ; echo ELIMINATED "$f" ; fi ; done
+  shell: |
+    test -d /var/lib/dkms/{{ item }}/ || exit 0
+    cd /var/lib/dkms/{{ item }}/
+    for f in */source ; do
+      if [ ! -f "$f/dkms.conf" ] ; then
+        rm -rf $(dirname "$f")
+        echo ELIMINATED "$f"
+      fi
+    done
   register: deleted_obsolete
   changed_when: '"ELIMINATED" in deleted_obsolete.stdout'
   with_items:
@@ -48,6 +56,9 @@
       set -ex
       vers={{ kernelvers|join(" ")|quote }}
       ret=0
+      modtime() {
+        stat "$1" -c "%Y"
+      }
       for ver in $vers ; do
         # we only uninstall kernel modules from kernels who still can have modules rebuilt
         # kernels that do not have the main or the devel packages cannot be rebuilt
@@ -61,12 +72,24 @@
         for module in zfs ; do
           for action in uninstall remove ; do
             dkmsver=`(ls --sort=time -d1 /usr/src/$module-* || true) | head -1` ; dkmsver=${dkmsver#/usr/src/$module-}
-            test -n "$dkmsver" || continue
+            test -d "/usr/src/$module-$dkmsver" || continue
             out=`dkms status -m $module -k $ver -v $dkmsver`
             echo "====== output of dkms status for kernel $ver =======" >&2
             echo "$out" >&2
             echo "====================================================" >&2
             if [ "$out" != "" ] ; then
+              modtime_source=$( modtime "/usr/src/$module-$dkmsver" ) || {
+                echo "/usr/src/$module-$dkmsver" does not exist >&2
+                modtime_source=0
+              }
+              modtime_module=$( modtime "/usr/lib/modules/$ver/extra/$module.ko.xz" ) || {
+                echo "/usr/lib/modules/$ver/extra/$module.ko.xz" does not exist >&2
+                modtime_module=0
+              }
+              if [ $modtime_module -gt $modtime_source ] ; then
+                echo "/usr/lib/modules/$ver/extra/$module.ko.xz" is newer than "/usr/src/$module-$dkmsver" >&2
+                continue
+              fi
               if [ $action == uninstall ] ; then
                 out=`dkms status -m $module -k $ver -v $dkmsver`
                 echo "$out" | grep -q ': installed' || { echo $module is not installed >&2 ; continue ; }
@@ -113,12 +136,33 @@
           dkmsver=`ls --sort=time -d1 /usr/src/$module-* | head -1` ; dkmsver=${dkmsver#/usr/src/$module-}
           test -n "$dkmsver"
           dkms install --directive REMAKE_INITRD=no -m $module -k "$ver" -v "$dkmsver" || exit $?
-          echo YES
+          echo YES dkms install "$ver"
         done
       done
   register: install_zfs
   when: mustrecompile.changed
   changed_when: "'YES' in install_zfs.stdout"
+  tags:
+  - zfs
+  - dkms
+
+- name: remove weak-modules
+  shell: |
+      set -ex
+      vers={{ kernelvers|join(" ")|quote }}
+      for ver in $vers ; do
+        for module in zfs ; do
+          if test -f /usr/lib/modules/"$ver"/weak-updates/"$module".ko.xz ; then
+            weak-modules --remove-kernel {% if ansible_check_mode %}--dry-run {% endif %}"$ver"
+            {% if ansible_check_mode %}echo {% endif %}depmod -a "$ver"
+            echo YES weak-modules remove kernel "$ver"
+          fi
+        done
+      done
+  check_mode: no
+  register: weak_modules
+  when: mustrecompile.changed
+  changed_when: "'YES' in weak_modules.stdout"
   tags:
   - zfs
   - dkms
