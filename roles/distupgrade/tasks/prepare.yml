@@ -14,5 +14,9 @@
   when: debug_shell
 
 - name: set SELinux to permissive
-  shell: sed -i 's/=enforcing/=permissive/' /etc/selinux/config
+  shell: |
+    grep =enforcing /etc/selinux/config
+    sed -i 's/=enforcing/=permissive/' /etc/selinux/config
+  register: permissive
+  changed_when: 'enforcing in permissive.stdout'
   when: ansible_distribution_version|int >= 29
