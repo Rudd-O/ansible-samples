@@ -425,7 +425,7 @@ alias_database = hash:/etc/aliases
 # Basically, the software tries user+foo and .forward+foo before
 # trying user and .forward.
 #
-recipient_delimiter = +
+recipient_delimiter = {{ mail.recipient_delimiter }}
 
 # DELIVERY TO MAILBOX
 #
