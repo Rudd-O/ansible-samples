@@ -2,30 +2,38 @@
 
 - name: redo initramfs
   shell: |
-      set -ex
+      set -e
       cd /boot
-      for initramfs in initramfs-*.img initramfs-*.img.knowngood /lib/modules/* ; do
-          if [ ! -e "$initramfs" ] ; then continue ; fi
-          initramfs=$(basename "$initramfs")
-          vmlinuz=vmlinuz-${initramfs#initramfs-}
-          vmlinuz=${vmlinuz%.knowngood}
-          vmlinuz=${vmlinuz%.img}
-          initramfs=${initramfs%.knowngood}
-          initramfs=${initramfs%.knowngood}
-          if echo "$initramfs" | grep -q initramfs ; then
+      kvers=
+      for kver in initramfs-*.img initramfs-*.img.knowngood /lib/modules/* ; do
+          kver=$(basename "$kver")
+          kver=${kver#initramfs-}
+          kver=${kver%.knowngood}
+          kver=${kver%.img}
+          if echo "$kvers" | grep -q "$kver" ; then
               true
           else
-              initramfs=initramfs-$initramfs
+              kvers="$kvers $kver"
           fi
-          ver=${vmlinuz#vmlinuz-}
+      done
+      set -x
+      for kver in $kvers ; do
+          libmodules=/lib/modules/"$kver"
+          initramfs=initramfs-$kver.img
+          knowngood=$initramfs.knowngood
+          vmlinuz=vmlinuz-$kver
+          if [ ! -e "$libmodules" ] ; then
+              echo "$libmodules does not exist, continuing" >&2
+              continue
+          fi
           if [ ! -f "$vmlinuz" ] ; then
               echo "$vmlinuz does not exist, removing obsolete initramfs and /lib/modules" >&2
               rm -fr "$initramfs" "$initramfs.knowngood" /lib/modules/"$ver"
-              echo CHANGED
+              echo CHANGED removed obsolete files
               continue
           fi
-          if [ ! -f "$initramfs".knowngood ] ; then
-              cp -f "$initramfs" "$initramfs".knowngood && echo CHANGED backup made of "$initramfs"
+          if [ ! -f "$knowngood" ] ; then
+              cp -f "$initramfs" "$knowngood" && echo CHANGED backup made of "$initramfs"
           fi
       done
       dracut -f --regenerate-all && echo CHANGED regenerated all initial RAM disks
