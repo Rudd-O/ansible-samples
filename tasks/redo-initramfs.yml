@@ -18,6 +18,7 @@
       done
       set -x
       for kver in $kvers ; do
+          if [ -z "$kver" ] ; then continue ; fi
           libmodules=/lib/modules/"$kver"
           initramfs=initramfs-$kver.img
           knowngood=$initramfs.knowngood
@@ -28,7 +29,7 @@
           fi
           if [ ! -f "$vmlinuz" ] ; then
               echo "$vmlinuz does not exist, removing obsolete initramfs and /lib/modules" >&2
-              rm -fr "$initramfs" "$initramfs.knowngood" /lib/modules/"$ver"
+              rm -fr "$initramfs" "$initramfs.knowngood" "$libmodules"
               echo CHANGED removed obsolete files
               continue
           fi
