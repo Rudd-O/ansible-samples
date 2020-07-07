@@ -56,5 +56,8 @@
 
 - name: set SELinux to enforcing
   shell: |
+    set -e
     sed -i 's/=permissive/=enforcing/' /etc/selinux/config
-    setenforce Enforcing
+    if grep =enforcing /etc/selinux/config ; then
+      setenforce Enforcing
+    fi
