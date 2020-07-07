@@ -6,8 +6,7 @@
   import_role:
     name: generic-rpm-install
   vars:
-    project: prosody-modules
-    package: prosody-modules
+    packages: [prosody-modules]
     register_var: installprosodymodules
   when: xmpp.modules_origin == "package"
   tags: modules
