@@ -73,11 +73,11 @@
   service:
     name: prosody
     state: '{% if
-               prosodyconfigrestarts|changed
+               prosodyconfigrestarts.changed
                or
-               sslconf|changed
+               sslconf.changed
              %}restarted{% elif
-               prosodyconfig|changed
+               prosodyconfig.changed
              %}reloaded{%
                else
              %}started{% endif %}'

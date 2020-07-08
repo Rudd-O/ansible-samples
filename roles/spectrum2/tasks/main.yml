@@ -59,11 +59,11 @@
   service:
     name: spectrum2
     state: '{% if
-               addservice|changed
+               addservice.changed
                or
-               changelogs|changed
+               changelogs.changed
                or
-               deleteservice|changed
+               deleteservice.changed
              %}restarted{%
                else
              %}started{% endif %}'
