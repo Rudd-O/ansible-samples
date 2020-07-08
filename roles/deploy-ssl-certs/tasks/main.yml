@@ -42,6 +42,7 @@
     owner: root
     group: root
   with_items: '{{ _ssl_dict }}'
+  no_log: true
   register: ssl_cert_deploy
 
 - name: install SSL intermediate certificates
@@ -54,6 +55,7 @@
   with_subelements:
   - '{{ _ssl_dict }}'
   - intermediate_certificates
+  no_log: true
   register: ssl_intermediate_deploy
 
 - name: assemble certificate chain
@@ -75,6 +77,7 @@
   with_items: '{{ _ssl_dict }}'
   register: ssl_cert_assemble
   check_mode: no
+  no_log: true
   changed_when: "'CHANGED' in ssl_cert_assemble.stdout"
 
 - name: detect if SSL configuration changed
