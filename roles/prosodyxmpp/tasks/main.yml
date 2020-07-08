@@ -16,7 +16,7 @@
   when: xmpp.modules_origin != "package"
   tags: modules
 
-- include_role:
+- import_role:
     name: deploy-ssl-certs
   tags: ssl
 

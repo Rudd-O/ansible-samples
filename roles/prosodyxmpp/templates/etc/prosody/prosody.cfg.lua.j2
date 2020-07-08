@@ -41,7 +41,7 @@ allow_registration = false;
 ssl = {
 	key = "{{ data.key.path }}";
 	certificate = "{{ data.assembled_certificate.path }}";
-	{% if xmpp.ssl.protocol)|default(False) != False %}protocol = "{{ xmpp.ssl.protocol }}";{% endif %}
+	{% if xmpp.ssl.protocol|default(False) != False %}protocol = "{{ xmpp.ssl.protocol }}";{% endif %}
 }
 {% endif %}
 {% endfor %}
@@ -131,7 +131,7 @@ VirtualHost "{{ host.replace('"', '\\"') }}"
 	ssl = {
 		key = "{{ data.key.path }}";
 		certificate = "{{ data.assembled_certificate.path }}";
-		{% if xmpp.ssl.protocol)|default(False) != False %}protocol = "{{ xmpp.ssl.protocol }}";{% endif %}
+		{% if xmpp.ssl.protocol|default(False) != False %}protocol = "{{ xmpp.ssl.protocol }}";{% endif %}
 	}
 
 {% if xmpp.conference.enabled %}
