@@ -15,6 +15,7 @@
 
 - name: set SELinux to permissive
   shell: |
+    test -f /etc/selinux/config || exit 0
     grep =enforcing /etc/selinux/config
     sed -i 's/=enforcing/=permissive/' /etc/selinux/config
   register: permissive
