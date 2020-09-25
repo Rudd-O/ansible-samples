@@ -13,7 +13,6 @@
       set -e
       vers={{ kernelvers|join(" ")|quote }}
       for ver in $vers ; do
-        if [ "$ver" == "3.18.17-6.pvops.qubes.x86_64" ] ; then continue ; fi
         rpm -q kernel-$ver > /dev/null 2>&1 || rpm -q kernel-core-$ver > /dev/null 2>&1 || continue
         lsinitrd /boot/initramfs-$ver.img 2>/dev/null | grep -q zfs.ko >&2 || { touch /.zfsreinstallneeded ; echo NO ; }
         lsinitrd /boot/initramfs-$ver.img 2>/dev/null | grep -qq etc/crypttab >&2 || { touch /.zfsreinstallneeded ; echo NO ; }
