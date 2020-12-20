@@ -1,6 +1,8 @@
 - include_role:
     name: install-packages
   when: ansible_distribution == "Qubes"
+  tags:
+  - packages
 - name: fix PAM settings for kscreensaver so the screen can be unlocked
   shell: |
       cd /etc/pam.d
@@ -18,9 +20,33 @@
   register: kscreensaverfix
   changed_when: '"ALREADY" not in kscreensaverfix.stdout'
   when: ansible_distribution == "Qubes"
-- name: fix color palette
-  shell: test -d "$HOME"/.local/share/qubes-kde || { echo YES ; /usr/bin/qubes-generate-color-palette ; }
-  become: false
-  register: dom0palette
-  changed_when: '"YES" in dom0palette.stdout'
-  when: ansible_distribution == "Qubes"
+- name: enable OTP usage
+  ini_file_without_spaces:
+      dest: /etc/sddm.conf
+      section: XDisplay
+      option: ServerArguments
+      value: "-nolisten tcp -background none"
+  become: true
+  tags:
+  - sddm
+- name: disable lightdm
+  service:
+    name: lightdm
+    enabled: no
+  tags:
+  - sddm
+- name: enable sddm
+  service:
+    name: sddm
+    enabled: yes
+  tags:
+  - sddm
+
+  #- name: fix color palette
+#  shell: test -d "$HOME"/.local/share/qubes-kde || { echo YES ; /usr/bin/qubes-generate-color-palette ; }
+#  become: false
+#  register: dom0palette
+#  changed_when: '"YES" in dom0palette.stdout'
+#  when: ansible_distribution == "Qubes"
+#- name: configure SDDM
+#  
