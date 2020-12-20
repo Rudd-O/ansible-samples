@@ -4,10 +4,12 @@
   register: _ssl_dict
   no_log: true
   changed_when: false
+  tags: always
 
 - set_fact:
     _ssl_dict: '{{ _ssl_dict.stdout|from_json }}'
   no_log: true
+  tags: always
 
 - name: install SSL key
   copy:
@@ -83,6 +85,7 @@
 - name: detect if SSL configuration changed
   set_fact:
     sslconf:
-      changed: '{{ ssl_key_acl.changed|default(False) or ssl_key_deploy.changed or ssl_cert_deploy.changed or ssl_intermediate_deploy.changed or ssl_cert_assemble.changed}}'
+      changed: '{{ ssl_key_acl.changed|default(False) or ssl_key_deploy.changed|default(False) or ssl_cert_deploy.changed|default(False) or ssl_intermediate_deploy.changed|default(False) or ssl_cert_assemble.changed|default(False)}}'
       result: '{{ _ssl_dict }}'
   no_log: true
+  tags: always
