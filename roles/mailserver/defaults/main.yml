@@ -11,6 +11,7 @@ mail:
 #   - mailserver.domain.com
 #   - domain.com
 #   - bond.name
+  mailbox_type: mbox
 
 spam:
   # autoregister_incoming_mail will cause incoming mail to be registered in
