@@ -12,6 +12,18 @@
   tags:
   - dovecotplugins
 
+- name: create Diffie-Hellman SSL parameters file
+  shell: |
+    rm -f /var/lib/dovecot/ssl-parameters.dat
+    test -f /etc/dovecot/dh.pem || { 
+      openssl dhparam 2048 > /etc/dovecot/dh.pem
+      chmod 440 /etc/dovecot/dh.pem
+      echo CHANGED
+    }
+  register: dhparam
+  changed_when: '"YES" in dhparam.stdout'
+  tags: doveconf
+
 - name: install dovecot configuration files
   template: src=templates/dovecot{{ item }} dest={{ item }} mode=0644 owner=root group=root
   with_items:
