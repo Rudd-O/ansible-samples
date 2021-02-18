@@ -1,9 +1,9 @@
 use_generic_rpm_install: False
 zfs_packages:
-    - libuutil1
-    - libzpool2
-    - libnvpair1
-    - libzfs2
+    - libuutil3
+    - libnvpair3
+    - libzpool4
+    - libzfs4
     - zfs
     - zfs-dkms
     - zfs-dracut
