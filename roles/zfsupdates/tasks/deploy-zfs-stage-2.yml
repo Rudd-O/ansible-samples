@@ -13,7 +13,11 @@
       set -e
       vers={{ kernelvers|join(" ")|quote }}
       for ver in $vers ; do
-        rpm -q kernel-$ver > /dev/null 2>&1 || rpm -q kernel-core-$ver > /dev/null 2>&1 || continue
+        if rpm -q kernel-$ver > /dev/null || rpm -q kernel-core-$ver > /dev/null || rpm -q kernel-latest-$ver > /dev/null ; then
+          true
+        else
+          continue
+        fi
         lsinitrd /boot/initramfs-$ver.img 2>/dev/null | grep -q zfs.ko >&2 || { touch /.zfsreinstallneeded ; echo NO ; }
         lsinitrd /boot/initramfs-$ver.img 2>/dev/null | grep -qq etc/crypttab >&2 || { touch /.zfsreinstallneeded ; echo NO ; }
       done
