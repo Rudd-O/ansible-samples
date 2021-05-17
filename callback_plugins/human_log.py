@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import StringIO
 import collections
 import copy
 import yaml
+
+from io import StringIO
 
 from ansible import constants as C
 from ansible.parsing.yaml.dumper import AnsibleDumper
@@ -16,12 +17,10 @@ try:
 except ImportError:
    from ansible.vars.unsafe_proxy import AnsibleUnsafeText
 
-class LiteralText(unicode): pass
+class LiteralText(str): pass
 
 
 def ColorLiteralText(text, color):
-    if not isinstance(text, basestring):
-        text = unicode(text)
     return LiteralText(stringc(text, color))
 
 
@@ -247,7 +246,7 @@ def human_log(res, task, host, color, indent_with="  ", prefix="", is_handler=Fa
         res[ColorLiteralText(k, color)] = v
     banner = LiteralText(stringc(banner, color))
     res = {banner: res}
-    c = StringIO.StringIO()
+    c = StringIO()
     d = MyDumper(c)
     d.open()
     d.represent(res)
