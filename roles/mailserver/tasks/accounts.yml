@@ -1,3 +1,5 @@
+# This is now fully migrated to the email.mda formula.
+
 - name: create user
   user:
     name: "{{ item.name }}"

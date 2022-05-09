@@ -1,5 +1,8 @@
 # Complete mail server with support for DKIM, SPF, spam classification and Sieve rules
 
+**Warning: this role is currently unmaintained.**  The replacement is a SaltStack
+formula here: https://github.com/Rudd-O/saltstack-automation/tree/master/formulas/email .
+
 This Ansible role deploys a full SMTP server and IMAP server, compliant
 with all the best practices for spam-free and good-delivery e-mail processing,
 including (but not limited to) the following features:
