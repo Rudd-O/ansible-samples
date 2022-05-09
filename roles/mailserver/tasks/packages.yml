@@ -3,14 +3,14 @@
 - name: install required software
   package: name={{ item }} state=present
   with_items:
-  - postgrey
-  - postfix
-  - mailx
+  - postgrey # ported
+  - postfix # ported
+  - mailx # no need to port
   - bogofilter
-  - dovecot
+  - dovecot # ported
   - dovecot-pigeonhole
-  - ca-certificates
-  - pypolicyd-spf
-  - opendkim
-- name: remove sendmail
+  - ca-certificates # ported
+  - pypolicyd-spf # ported
+  - opendkim # ported
+- name: remove sendmail # not to port
   package: name=sendmail state=absent
