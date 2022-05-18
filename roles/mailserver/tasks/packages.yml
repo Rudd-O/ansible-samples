@@ -8,7 +8,7 @@
   - mailx # no need to port
   - bogofilter
   - dovecot # ported
-  - dovecot-pigeonhole
+  - dovecot-pigeonhole # ported
   - ca-certificates # ported
   - pypolicyd-spf # ported
   - opendkim # ported

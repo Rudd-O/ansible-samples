@@ -1,4 +1,6 @@
-- name: symlink sieve plugins
+# This is now fully mirrored in the email.mda SaltStack formula.
+
+- name: symlink sieve plugins # MIGRATED
   shell: |
     set -ex
     cd /usr/lib64/dovecot/sieve
@@ -12,7 +14,7 @@
   tags:
   - dovecotplugins
 
-- name: create Diffie-Hellman SSL parameters file
+- name: create Diffie-Hellman SSL parameters file # MIGRATED
   shell: |
     rm -f /var/lib/dovecot/ssl-parameters.dat
     test -f /etc/dovecot/dh.pem || { 
@@ -24,14 +26,14 @@
   changed_when: '"YES" in dhparam.stdout'
   tags: doveconf
 
-- name: install dovecot configuration files
+- name: install dovecot configuration files # MIGRATED
   template: src=templates/dovecot{{ item }} dest={{ item }} mode=0644 owner=root group=root
   with_items:
   - /etc/dovecot/local.conf
   register: dovecot_config
   tags: doveconf
 
-- name: create dovecot sieve global directories
+- name: create dovecot sieve global directories # MIGRATED
   file: name={{ item }} state=directory owner=root group=root mode=0755 setype=dovecot_etc_t seuser=system_u
   with_items:
   - /var/lib/sieve
@@ -41,13 +43,13 @@
   - /var/lib/sieve/imapsieve
   tags: sieve
 
-- name: create dovecot sieve directory for programs to be used with pipe and filter
+- name: create dovecot sieve directory for programs to be used with pipe and filter # MIGRATED
   file: name={{ item }} state=directory owner=root group=root mode=0755
   with_items:
   - /usr/local/libexec/sieve
   tags: sieve
 
-- name: deploy dovecot global scripts
+- name: deploy dovecot global scripts # MIGRATED
   copy:
     src: files/dovecot/var/lib/sieve/{{ item }}/
     dest: /var/lib/sieve/{{ item }}/
@@ -64,7 +66,7 @@
   register: sieve_global
   tags: sieve
 
-- name: deploy dovecot spam classifier script
+- name: deploy dovecot spam classifier script # MIGRATED
   template:
     src: templates/dovecot/var/lib/sieve/{{ item }}/spamclassifier.sieve.j2
     dest: /var/lib/sieve/{{ item }}/spamclassifier.sieve
@@ -79,7 +81,7 @@
   register: sieve_global_spamclassifier
   tags: sieve
 
-- name: compile dovecot global scripts
+- name: compile dovecot global scripts # MIGRATED
   shell: |
     set -e
     for item in before.d after.d global imapsieve ; do
@@ -109,13 +111,13 @@
   - sieve
   - sievec
 
-- name: install ham / spam classifier
+- name: install ham / spam classifier # MIGRATED
   template: src=templates/dovecot/usr/local/libexec/sieve/spamclassifier dest=/usr/local/libexec/sieve/spamclassifier mode=0755 owner=root group=root
   tags:
   - sieve
   - classifiers
 
-- name: install ham / spam reclassifiers
+- name: install ham / spam reclassifiers # MIGRATED
   template: src=templates/dovecot/usr/local/libexec/sieve/learn dest=/usr/local/libexec/sieve/learn-{{ item }} mode=0755 owner=root group=root
   with_items:
   - ham
